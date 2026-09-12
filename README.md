@@ -552,6 +552,27 @@ src/api.py 基于 FastAPI，把 RAG 暴露为 HTTP 接口。
 
 未配置时静默跳过，不影响索引。
 
+## 生产部署建议
+
+个人使用和生产的区别主要在向量库和并发上。
+
+**向量库上限**：Qdrant 官方客户端在数据点超过 20,000 时建议切到 server 模式。切换方式：
+
+    docker run -d -p 6333:6333 -v /data/qdrant:/qdrant/storage qdrant/qdrant
+
+然后改 config.py：
+
+    QDRANT_MODE = "server"
+    QDRANT_URL = "http://localhost:6333"
+
+**并发**：Streamlit 单实例适合个人，多用户场景建议用 api.py（FastAPI）+ 反向代理，支持并发请求。
+
+**容器化**：用 Dockerfile 构建镜像，配合 docker-compose 挂载 qdrant_data 和 .env。
+
+**监控**：目前无内置监控，建议在生产环境加日志收集（如 Loki）。
+
+本项目定位偏个人使用和学习，企业级需求可参考 dsh-knowledge。
+
 ## 常见问题
 
 **Q：装依赖时报网络超时**

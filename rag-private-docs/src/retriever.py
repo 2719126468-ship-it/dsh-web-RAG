@@ -17,6 +17,8 @@ from langchain_qdrant import QdrantVectorStore
 from qdrant_client import QdrantClient
 from rank_bm25 import BM25Okapi
 
+from qdrant_factory import create_qdrant_client
+
 from config import config
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
@@ -54,7 +56,7 @@ class HybridRetriever:
             model_kwargs={"device": "cpu"},
             encode_kwargs={"normalize_embeddings": True},
         )
-        self.client = QdrantClient(path=str(QDRANT_PATH))
+        self.client = create_qdrant_client()
         self.store = QdrantVectorStore(
             client=self.client,
             collection_name=config.COLLECTION_NAME,

@@ -33,3 +33,10 @@ config = Config()
 
 # 嵌入向量维度（与 EMBEDDING_MODEL 对应；BGE-small-zh 为 512）
 EMBEDDING_DIM = 512
+
+# ========== Qdrant 部署模式 ==========
+# "local"：嵌入式本地模式（默认，数据存 qdrant_data/）
+# "server"：连接远程 Qdrant 服务（如 Docker 部署的 qdrant/qdrant）
+QDRANT_MODE = "local"
+QDRANT_URL = "http://localhost:6333"
+QDRANT_API_KEY = ""

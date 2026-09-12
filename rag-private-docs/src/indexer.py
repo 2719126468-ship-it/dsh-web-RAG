@@ -16,7 +16,9 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_qdrant import QdrantVectorStore
 from qdrant_client import QdrantClient
-from qdrant_client.http import models  # Qdrant HTTP models for vector params etc.
+from qdrant_client.http import models
+
+from qdrant_factory import create_qdrant_client  # Qdrant HTTP models for vector params etc.
 
 from config import config
 
@@ -157,7 +159,7 @@ class IncrementalIndexer:
             encode_kwargs={"normalize_embeddings": True},
         )
         QDRANT_PATH.mkdir(parents=True, exist_ok=True)
-        self.client = QdrantClient(path=str(QDRANT_PATH))
+        self.client = create_qdrant_client()
         # Make sure collection exists (with correct vector size 512 for BGE)
         if not self.client.collection_exists(config.COLLECTION_NAME):
             print(f"[info] Creating collection {config.COLLECTION_NAME}")
@@ -219,11 +221,12 @@ class IncrementalIndexer:
                         print(f"[warn] Trying to continue with existing collection...")
             QDRANT_PATH.mkdir(parents=True, exist_ok=True)
             # Recreate client and collection fresh
-            self.client = QdrantClient(path=str(QDRANT_PATH))
-            self.client.create_collection(
-                collection_name=config.COLLECTION_NAME,
-                vectors_config=models.VectorParams(size=config.EMBEDDING_DIM, distance=models.Distance.COSINE),
-            )
+            self.client = create_qdrant_client()
+            if not self.client.collection_exists(config.COLLECTION_NAME):
+                self.client.create_collection(
+                    collection_name=config.COLLECTION_NAME,
+                    vectors_config=models.VectorParams(size=config.EMBEDDING_DIM, distance=models.Distance.COSINE),
+                )
             self.store = None
             self.manifest = {}  # Clear manifest since we're rebuilding
             print("[info] Collection recreated")

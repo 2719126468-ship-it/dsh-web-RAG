@@ -1,5 +1,7 @@
 # 私人 AI 知识库问答系统
 
+
+> **框架说明**：本项目是一个独立的 RAG 实现，核心基于 langchain / qdrant / DeepSeek API，不依赖 DeepSeek Harness (DSH) 的运行时。DSH 处于 Developer Preview 阶段，本项目仅参考其概念设计。
 [![Test](https://github.com/2719126468-ship-it/dsh-web-RAG/actions/workflows/test.yml/badge.svg)](https://github.com/2719126468-ship-it/dsh-web-RAG/actions/workflows/test.yml)
 [![Python](https://img.shields.io/badge/python-3.11%20%7C%203.12-blue)](https://www.python.org/)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
@@ -351,6 +353,33 @@ v8 修复了 indexer 与 Qdrant 交互中的三个问题：
 | 删除文档后向量残留 | 有（静默失败） | 无 |
 | Windows force 锁文件 | 偶发 | 解决 |
 | 换 embedding 模型 | 需改源码 | 改 config 即可 |
+
+## Qdrant 部署模式
+
+向量数据库支持两种模式，在 `src/config.py` 配置：
+
+    QDRANT_MODE = "local"    # 默认：嵌入式本地，数据存 qdrant_data/
+    # QDRANT_MODE = "server" # 远程：连接 Docker/云端 Qdrant
+    # QDRANT_URL = "http://localhost:6333"
+    # QDRANT_API_KEY = ""
+
+数据点超过 20,000 时建议切换远程模式：
+
+    docker run -d -p 6333:6333 -v /path/to/qdrant_storage:/qdrant/storage qdrant/qdrant
+
+## 答案忠实度评估（Faithfulness）
+
+`src/eval_faithfulness.py` 用于评估 AI 回答是否严格基于检索到的上下文。
+
+用法：
+
+    python src/eval_faithfulness.py qa_results.json
+
+输入格式：
+
+    [{"question": "合同金额？", "answer": "根据[1]...", "contexts": ["合同第3条..."]}]
+
+需要设置 `DEEPSEEK_API_KEY`。输出每条答案的 faithfulness 分数，以及缺乏依据的断言。
 
 ## 常见问题
 

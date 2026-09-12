@@ -28,6 +28,15 @@ jobs:
           python -m pip install --upgrade pip
           pip install pytest
 
+      - name: Debug environment
+        run: |
+          pwd
+          ls -la
+          echo "--- tests/ ---"
+          ls -la tests/ || echo "tests 目录不存在"
+          echo "--- rag-private-docs/ ---"
+          ls -la rag-private-docs/ || echo "rag-private-docs 目录不存在"
+
       - name: Run tests
         run: |
-          pytest tests/ -v
+          python -m pytest tests/ -v

@@ -61,3 +61,4 @@ htmlcov/
 
 # 对话记忆本地数据
 rag-private-docs/memory/
+rag-private-docs/eval/results/

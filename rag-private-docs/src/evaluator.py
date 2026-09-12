@@ -1,12 +1,15 @@
 """Lightweight RAG evaluator.
 
-Implements three RAGAS-style metrics without external API calls:
+Implements two RAGAS-style retrieval metrics without external API calls:
   - context_precision:  fraction of retrieved chunks that contain keywords from the question
   - context_recall:     fraction of ground-truth keywords found in retrieved chunks
-  - faithfulness_proxy: fraction of answer sentences that are grounded in retrieved context
+
+For answer faithfulness, see the separate eval_faithfulness.py (claim-level)
+and eval_ragas.py (aggregate, requires ragas package).
 
 Usage:
   python src/evaluator.py
+  python src/evaluator.py --save     # 保存结果到 eval/results/
 """
 import json
 import re
@@ -200,7 +203,31 @@ def evaluate(retriever: HybridRetriever, test_set: List[Dict] = None) -> Dict[st
     return {"summary": summary, "rows": rows}
 
 
+def _save_result(result):
+    """Save evaluation result to eval/results/ with timestamp filename."""
+    import time
+    results_dir = PROJECT_ROOT / "eval" / "results"
+    results_dir.mkdir(parents=True, exist_ok=True)
+    timestamp = time.strftime("%Y-%m-%dT%H-%M-%S")
+    out_file = results_dir / f"{timestamp}.json"
+    payload = {
+        "timestamp": timestamp,
+        "summary": result["summary"],
+        "rows": result["rows"],
+    }
+    out_file.write_text(
+        json.dumps(payload, ensure_ascii=False, indent=2),
+        encoding="utf-8",
+    )
+    print(f"\n结果已保存到 {out_file}")
+
+
 def main():
+    import argparse
+    parser = argparse.ArgumentParser(description="RAG 评估")
+    parser.add_argument("--save", action="store_true", help="保存结果到 eval/results/")
+    args = parser.parse_args()
+
     test_set = DEFAULT_TEST_SET
     if TEST_SET_PATH.exists():
         test_set = json.loads(TEST_SET_PATH.read_text(encoding="utf-8"))
@@ -222,6 +249,10 @@ def main():
     for k, v in result["summary"].items():
         if k != "num_questions":
             print(f"  {k:25s} = {v}")
+
+    if args.save:
+        _save_result(result)
+
     return result
 
 

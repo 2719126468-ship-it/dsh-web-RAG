@@ -1,5 +1,9 @@
 # 私人 AI 知识库问答系统
 
+[![Test](https://github.com/2719126468-ship-it/dsh-web-RAG/actions/workflows/test.yml/badge.svg)](https://github.com/2719126468-ship-it/dsh-web-RAG/actions/workflows/test.yml)
+[![Python](https://img.shields.io/badge/python-3.11%20%7C%203.12-blue)](https://www.python.org/)
+[![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+
 这是一个让你用自己的笔记、合同、邮件等文档，搭建一个私人 AI 助手的项目。
 
 它能做什么：问它"我和蓝海科技签的合同金额是多少？"，它会自动从你电脑里的合同文档里找到答案，并告诉你具体是哪一页、哪一段。

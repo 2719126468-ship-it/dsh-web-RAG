@@ -22,20 +22,17 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
+          cache: 'pip'
 
-      - name: Install pytest
+      - name: Install pytest and ruff
         run: |
           python -m pip install --upgrade pip
-          pip install pytest
+          pip install pytest ruff
 
-      - name: Debug environment
+      - name: Lint with Ruff
+        continue-on-error: true
         run: |
-          pwd
-          ls -la
-          echo "--- tests/ ---"
-          ls -la tests/ || echo "tests 目录不存在"
-          echo "--- rag-private-docs/ ---"
-          ls -la rag-private-docs/ || echo "rag-private-docs 目录不存在"
+          ruff check rag-private-docs/src/ tests/
 
       - name: Run tests
         run: |

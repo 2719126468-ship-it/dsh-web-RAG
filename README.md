@@ -328,7 +328,25 @@ v7 发现了三个关键 bug 并修复，retriever 池现在干净了：
 | context_recall | 1.0 | 1.0 |
 | Qdrant 集合点 | 未知 | 44（干净）|
 
-注意：v6 测试时 Qdrant 集合已经有 88-220 个点（含重复），context_precision 1.0 是污染数据下的假象。v7 真正清干净后是 0.9，这是真实性能。如果以后想保持集合干净（44 点），按下面的 v8 经验跑 `indexer.py --force`。
+注意：v6 阶段曾测出 context_precision 1.0，但当时 Qdrant 集合已有 88-220 个重复点，属污染数据。清干净后（v7）为 0.9，这才是真实性能。如果以后想保持集合干净（44 点），按 v8 的经验跑 `indexer.py --force`。
+
+## 升级日志（v8 最新）
+
+v8 修复了 indexer 与 Qdrant 交互中的三个问题：
+
+1. **删除文件的 Qdrant filter 失效**：`remove_deleted_from_store` 之前把裸 dict 传给 `points_selector`，Qdrant 不接受该类型，异常被 try/except 静默吞掉，导致已删除文件的向量残留在库里。修复：改用 `models.FilterSelector(filter=models.Filter(...))`，匹配改为 `models.MatchValue`（精确匹配）。
+
+2. **force 时未释放 SQLite 句柄**：`indexer.py --force` 之前用 `del self.client` 释放旧 client，但 Python 只是删引用，底层 SQLite 句柄不一定立刻关闭，Windows 上尤其明显。修复：显式调用 `self.client.close()`。
+
+3. **向量维度硬编码**：`VectorParams` 的 `size` 写死为 512，换 embedding 模型（如 BGE-base 768 维）会直接崩。修复：从 `config.EMBEDDING_DIM` 读取，`config.py` 新增该配置项。
+
+效果：
+
+| 项目 | 修复前 | 修复后 |
+|---|---|---|
+| 删除文档后向量残留 | 有（静默失败） | 无 |
+| Windows force 锁文件 | 偶发 | 解决 |
+| 换 embedding 模型 | 需改源码 | 改 config 即可 |
 
 ## 常见问题
 

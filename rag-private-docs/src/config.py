@@ -30,3 +30,6 @@ class Config:
 
 
 config = Config()
+
+# 嵌入向量维度（与 EMBEDDING_MODEL 对应；BGE-small-zh 为 512）
+EMBEDDING_DIM = 512

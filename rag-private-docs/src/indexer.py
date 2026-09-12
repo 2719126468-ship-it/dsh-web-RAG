@@ -128,14 +128,19 @@ def remove_deleted_from_store(client: QdrantClient, deleted: List[str]) -> int:
     """Delete points whose source metadata matches a deleted file path."""
     n = 0
     for rel in deleted:
-        # Match by source path which ends with the relative path
-        # Qdrant payload filter: source contains the relative path
         rel_escaped = rel.replace(chr(92), "/")
-        flt = {"must": [{"key": "metadata.source", "match": {"text": rel_escaped}}]}
+        flt = models.Filter(
+            must=[
+                models.FieldCondition(
+                    key="metadata.source",
+                    match=models.MatchValue(value=rel_escaped),
+                )
+            ]
+        )
         try:
-            res = client.delete(
+            client.delete(
                 collection_name=config.COLLECTION_NAME,
-                points_selector=flt,
+                points_selector=models.FilterSelector(filter=flt),
             )
             n += 1
         except Exception as e:
@@ -159,7 +164,7 @@ class IncrementalIndexer:
             self.client.create_collection(
                 collection_name=config.COLLECTION_NAME,
                 vectors_config=models.VectorParams(
-                    size=512, distance=models.Distance.COSINE
+                    size=config.EMBEDDING_DIM, distance=models.Distance.COSINE
                 ),
             )
             self.store = None
@@ -190,8 +195,11 @@ class IncrementalIndexer:
         # Strategy: close current client, delete dir, create fresh client.
         if force:
             # Close current client to release SQLite file handles
-            del self.client
-            del self.store
+            try:
+                if self.client is not None:
+                    self.client.close()
+            except Exception:
+                pass
             self.client = None
             self.store = None
             gc.collect()  # Ensure Python GC releases handles
@@ -214,7 +222,7 @@ class IncrementalIndexer:
             self.client = QdrantClient(path=str(QDRANT_PATH))
             self.client.create_collection(
                 collection_name=config.COLLECTION_NAME,
-                vectors_config=models.VectorParams(size=512, distance=models.Distance.COSINE),
+                vectors_config=models.VectorParams(size=config.EMBEDDING_DIM, distance=models.Distance.COSINE),
             )
             self.store = None
             self.manifest = {}  # Clear manifest since we're rebuilding

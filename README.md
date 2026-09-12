@@ -11,6 +11,29 @@
 它能做什么：问它"我和蓝海科技签的合同金额是多少？"，它会自动从你电脑里的合同文档里找到答案，并告诉你具体是哪一页、哪一段。
 
 
+## 能力速览
+
+| 维度 | 状态 |
+|---|---|
+| 开源协议 | MIT（见 [LICENSE](LICENSE)） |
+| CI | GitHub Actions，Python 3.11 / 3.12 双版本 |
+| 测试 | pytest，48 个用例，全绿 |
+| 容器化 | Dockerfile + .dockerignore + docker.yml |
+| 一键安装 | sh install.sh |
+| 健康检查 | sh diagnose.sh |
+| 提交钩子 | .githooks/pre-commit 自动跑测试 |
+| 文档格式 | .md / .txt / .pdf / .docx / .doc / .pptx / .xlsx / .csv（8 种） |
+| 评估体系 | evaluator.py（检索）+ eval_faithfulness.py（断言级）+ eval_ragas.py（RAGAS 三指标） |
+| 检索 | BM25 + 向量 + RRF 融合 + 可选 rerank |
+| 引用溯源 | 回答标注来源文件 + 行号 + 章节 |
+| 增量索引 | 只重索引变化文件 |
+| 可视化 | pipeline_app.py（Streamlit 五 Tab） |
+| 多模态 | PDF 提图 + VLM 描述（可选） |
+| 对话记忆 | memory.py（本地 JSON，零依赖） |
+| HTTP 接口 | api.py（FastAPI）+ webhook.py |
+| Qdrant 模式 | 本地嵌入式 / 远程 server 双模式 |
+| 依赖更新 | Dependabot 每周自动提 PR |
+
 ## 什么是 RAG？为什么要用它？
 
 RAG 是 Retrieval-Augmented Generation 的缩写，翻译过来就是"检索增强生成"。

@@ -414,6 +414,35 @@ A：本系统暂不支持。如需扩展，可参考 `unstructured` 库的 `part
 - 多用户：让系统支持多个账号，各自看各自的文档
 
 
+## 一键命令（Makefile）
+
+装了 make 的话，常用操作可以简写：
+
+    make test          # 运行测试
+    make lint          # Ruff 检查
+    make format        # Ruff 格式化
+    make index         # 增量索引
+    make reindex       # 全量重建索引
+    make run           # 启动 Web 界面
+    make clean         # 清理临时文件
+
+Windows 用户如果没有 make，可以装 Git Bash 或直接看 Makefile 里对应的命令。
+
+## Docker 部署
+
+如果不想在本地配 Python 环境，可以用 Docker 一条命令跑起来：
+
+    # 1. 在 rag-private-docs/.env 里配好 DEEPSEEK_API_KEY
+    # 2. 构建镜像
+    docker build -t dsh-web-rag .
+
+    # 3. 运行
+    docker run --rm -p 8501:8501 --env-file rag-private-docs/.env dsh-web-rag
+
+然后浏览器打开 http://localhost:8501 。
+
+注意：Docker 镜像默认不含你的 qdrant_data 索引，首次运行需要在容器里建索引，或者把本地的 qdrant_data 挂载进去。
+
 ## 协议
 
 MIT 协议，可以自由使用、修改、商用。

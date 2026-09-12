@@ -1,0 +1,18 @@
+# Python
+__pycache__/
+*.py[cod]
+venv/
+.venv/
+env/
+
+# 日志
+*.log
+
+# 数据（按需保留或忽略）
+qdrant_data/
+rag-private-docs/
+
+# 系统
+.DS_Store
+Thumbs.db
+

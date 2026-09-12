@@ -41,6 +41,20 @@ Verdicts:
 """
 
 
+def _get_critic_text(hit: Dict, max_len: int = 500) -> str:
+    """Text used for critic evaluation.
+
+    Priority: parent_text (what the LLM actually reads) > content (child).
+    This aligns critic decisions with the final LLM input. Using child-only
+    was a bug: a child may be a narrow fragment while its parent holds the
+    actual answer.
+    """
+    meta = hit.get("metadata", {})
+    parent = meta.get("parent_text", "")
+    text = parent if parent else hit.get("content", "")
+    return text[:max_len].replace("\n", " ")
+
+
 class RelevanceCritic:
     """Score retrieved chunks as YES/NO/MAYBE relative to the question."""
 
@@ -70,10 +84,7 @@ class RelevanceCritic:
             # Heuristic: low confidence = NO
             MIN_CONF = 0.10
             return ["NO" if h.get("confidence", 0) < MIN_CONF else "YES" for h in hits]
-        previews = []
-        for h in hits:
-            text = h.get("content", "")[:200].replace("\n", " ")
-            previews.append(text)
+        previews = [_get_critic_text(h) for h in hits]
         chunks_text = "\n".join(f"[{i+1}] {p}" for i, p in enumerate(previews))
         try:
             resp = self.llm.invoke(self.prompt.format(question=question, chunks=chunks_text))

@@ -178,9 +178,14 @@ def evaluate(retriever: HybridRetriever, test_set: List[Dict] = None) -> Dict[st
             hits = retriever.retrieve(q, top_k=5)
         if critic and hits:
             verdicts = critic.evaluate(q, hits)
-            hits, dropped = apply_critic(hits, verdicts, min_yes=2)
-            if dropped:
-                print(f"  [critic] dropped {len(dropped)}/{len(hits)+len(dropped)} chunks")
+            filtered, dropped = apply_critic(hits, verdicts, min_yes=2)
+            if not filtered:
+                print(f"  [warn] critic dropped all {len(hits)} chunks for: {q[:50]}")
+                print(f"  [warn] falling back to unfiltered hits to avoid zero score")
+            else:
+                if dropped:
+                    print(f"  [critic] dropped {len(dropped)}/{len(hits)} chunks")
+                hits = filtered
         rows.append({
             "question": q,
             "must_cite": must,

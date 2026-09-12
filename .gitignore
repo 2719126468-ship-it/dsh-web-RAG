@@ -58,3 +58,6 @@ htmlcov/
 # 临时调试脚本
 *.bat
 *.ps1
+
+# 对话记忆本地数据
+rag-private-docs/memory/

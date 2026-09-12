@@ -15,7 +15,7 @@ sentence-transformers>=2.7
 huggingface-hub>=0.20
 
 # Document loaders
-unstructured>=0.13
+unstructured>=0.18.32
 markdown>=3.6
 pypdf>=4.0
 python-docx>=1.1

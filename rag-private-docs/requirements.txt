@@ -50,3 +50,7 @@ openpyxl>=3.1.0
 
 # 可选：DeepDoc PDF 解析器（RAGFlow 抽取版），需要时手动安装
 # deepdoc-pdfparser>=0.1.0
+
+# RAGAS 评估（可选，较重）
+# ragas>=0.1.9
+# datasets>=2.18.0

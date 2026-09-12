@@ -41,3 +41,6 @@ numpy>=2.0
 
 # Dev (optional, for generating test PDFs)
 reportlab>=4.0
+
+# PPTX 支持
+python-pptx>=0.6.23

@@ -50,7 +50,7 @@ def save_manifest(manifest: Dict[str, str]) -> None:
 
 def scan_files() -> Dict[str, Path]:
     """Walk docs/ and return {relative_path: absolute_path} for supported files."""
-    suffixes = ["*.md", "*.txt", "*.pdf", "*.docx"]
+    suffixes = ["*.md", "*.txt", "*.pdf", "*.docx", "*.pptx", "*.doc"]
     found = {}
     for suf in suffixes:
         for p in DOCS_DIR.rglob(suf):
@@ -95,6 +95,12 @@ def load_file(path: Path) -> List:
         return parse_pdf(path)
     elif suf == ".docx":
         loader = Docx2txtLoader(str(path))
+    elif suf == ".pptx":
+        from pptx_parser import parse_pptx
+        return parse_pptx(path)
+    elif suf == ".doc":
+        from doc_parser import parse_doc
+        return parse_doc(path)
     else:
         return []
     try:

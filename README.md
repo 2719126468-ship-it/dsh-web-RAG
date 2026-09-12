@@ -101,42 +101,47 @@ RAG 的解决方案很简单：你问问题时，先从你电脑里找出相关�
 
 
 ## 项目文件结构
-```text
-rag-private-docs/
-├── docs/ 你的文档放这里
-│ ├── 01-rag-intro.md 示例：什么是 RAG
-│ ├── 02-langchain-notes.md
-│ ├── 03-deepseek-api.md
-│ ├── 04-contract-2024-0312.md 示例：合同
-│ ├── 05-weekend-hike-moganshan.md 示例：笔记
-│ └── 06-email-client-dec-launch.md 示例：邮件
-├── src/ 程序源代码
-│ ├── config.py 配置文件
-│ ├── indexer.py 索引器（把文档变成可搜索的格式）
-│ ├── retriever.py 检索器（找到相关段落）
-│ ├── outline.py 提取文档目录
-│ ├── qa.py 问答主程序
-│ ├── evaluator.py 自动评估
-│ ├── watcher.py 文件变化监听（可选）
-│ ├── notion_sync.py Notion 同步（可选）
-│ └── app.py 网页界面
-├── example_lessons/ 5 个小教程，循序渐进
-│ ├── 01_hello_llm.py
-│ ├── 02_embeddings.py
-│ ├── 03_vector_search.py
-│ ├── 04_mini_rag.py
-│ └── 05_evaluate.py
-├── eval/ 自定义测试集（可选，按需创建）
-│ └── test_set.json 你的测试问题（格式见"进阶功能"章节）
-├── qdrant_data/ 向量数据库（程序自动生成，不要手动修改）
-├── .env.example 环境变量模板（复制成 .env 后填 Key）
-├── .env 你的实际配置（需自行创建，不要提交到 Git）
-├── .gitignore 忽略 .env、qdrant_data/、pycache/ 等
-├── TUTORIAL.md 详细教程（手把手）
-├── README.md 你正在看的这个文件
-└── requirements.txt 依赖库清单
-```
 
+    dsh-web-RAG/                        # 仓库根目录
+    ├── rag-private-docs/               # 项目实际内容
+    │   ├── src/                        # 源代码（30 个文件）
+    │   ├── docs/                       # 你的文档放这里
+    │   ├── example_lessons/            # 5 个迷你实验
+    │   ├── eval/                       # 自定义测试集（可选）
+    │   ├── memory/                     # 对话记忆数据（自动生成）
+    │   ├── qdrant_data/                # 向量数据库（自动生成）
+    │   ├── TUTORIAL.md                 # 手把手教程
+    │   ├── requirements.txt            # 依赖清单
+    │   └── .env                        # 你的 API Key 配置（不提交）
+    ├── tests/                          # 单元测试
+    │   ├── test_basic.py
+    │   ├── test_config_fields.py
+    │   ├── test_memory.py
+    │   └── test_webhook.py
+    ├── .github/                        # CI 和模板
+    │   ├── workflows/
+    │   │   ├── test.yml
+    │   │   ├── docker.yml
+    │   │   └── evaluate.yml
+    │   ├── ISSUE_TEMPLATE/
+    │   └── dependabot.yml
+    ├── install.sh                      # 一键安装
+    ├── diagnose.sh                     # 项目自检
+    ├── Dockerfile                      # 容器化
+    ├── Makefile                        # 常用命令
+    ├── README.md                       # 你正在看的文件
+    ├── LICENSE                         # MIT
+    └── CHANGELOG.md                    # 版本历史
+
+    src/ 目录下的 30 个文件按功能分类：
+
+    核心流程：config.py（配置）、indexer.py（索引）、retriever.py（检索）、qa.py（问答）
+    文档解析：pdf_parser.py、pdf_parser_deepdoc.py、doc_parser.py、pptx_parser.py、excel_parser.py、multimodal_parser.py
+    评估：evaluator.py、eval_faithfulness.py、eval_ragas.py、diagnostic.py
+    界面：app.py、pipeline_app.py、pipeline_ui.py
+    扩展：memory.py、memory_cli.py、api.py、webhook.py、qdrant_factory.py
+    辅助：outline.py、watcher.py、notion_sync.py、ingest.py、critic.py
+    切分/改写：parent_child_splitter.py、query_rewriter.py、contextualizer.py
 
 ## 怎么用起来
 

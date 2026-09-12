@@ -50,3 +50,8 @@ ENABLE_MULTIMODAL = False
 VLM_MODEL = "gpt-4o-mini"
 VLM_BASE_URL = ""
 VLM_API_KEY = ""
+
+# ========== 对话记忆（可选）==========
+ENABLE_MEMORY = False
+MEMORY_PATH = "../memory/memories.json"
+MEMORY_TOP_K = 3

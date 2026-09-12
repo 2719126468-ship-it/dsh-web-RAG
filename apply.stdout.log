@@ -1,0 +1,24 @@
+[apply] profile: C:\Users\HWZ\.dsh\profiles\web
+[apply] snapshot already exists, skip: C:\Users\HWZ\.dsh\profiles\web\.dsh-snapshots\linxin-bundles-fix.snapshot.zip
+[apply] to re-run, execute rollback-fix-linxin-bundles.bat first
+[apply] patching package.json to add 3 linxin dependencies
+[apply] + @linxin666/dsh-web-ui-all @ ^0.3.6
+[apply] + @linxin666/dsh-client-ui-task-board @ ^0.3.6
+[apply] + @linxin666/dsh-remote-web-ui @ ^0.3.6
+[apply] wrote C:\Users\HWZ\.dsh\profiles\web\package.json
+[apply] running pnpm install --lockfile-only (no node_modules write)
+✓ Lockfile passes supply-chain policies (verified 5m ago)
+[WARN] deprecated @linxin666/dsh-web-ui-all@0.3.6: 迁移到 @linxin666/dsh-web-all；详见该版本 Release notes
+Progress: resolved 1, reused 0, downloaded 0, added 0
+Progress: resolved 20, reused 0, downloaded 0, added 0
+[WARN] HEAD https://gh-proxy.com/https://codeload.github.com/zhao1012/dsh-fix-duplicate-loader-id/tar.gz/64f0d6fc80d03cb07b563abcfce66b8c8665aeaa error (23). Will retry in 10 seconds. 2 retries left.
+Progress: resolved 20, reused 1, downloaded 0, added 0
+Progress: resolved 439, reused 1, downloaded 0, added 0
+[WARN] 8 deprecated subdependencies found: fstream@1.0.12, glob@7.2.3, inflight@1.0.6, lodash.isequal@4.5.0, phin@2.9.3, phin@3.7.1, rimraf@2.7.1, uuid@8.3.2
+[WARN] Issues with peer dependencies found. Run "pnpm peers check" to list them.
+
+Done in 1m 17.6s using pnpm v11.24.0
+Progress: resolved 688, reused 1, downloaded 0, added 0
+
+[apply] DONE. Please paste stdout/stderr back to Agent.
+[apply] to undo: run rollback-fix-linxin-bundles.bat

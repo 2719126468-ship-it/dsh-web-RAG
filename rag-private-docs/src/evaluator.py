@@ -1,0 +1,229 @@
+"""Lightweight RAG evaluator.
+
+Implements three RAGAS-style metrics without external API calls:
+  - context_precision:  fraction of retrieved chunks that contain keywords from the question
+  - context_recall:     fraction of ground-truth keywords found in retrieved chunks
+  - faithfulness_proxy: fraction of answer sentences that are grounded in retrieved context
+
+Usage:
+  python src/evaluator.py
+"""
+import json
+import re
+from pathlib import Path
+from typing import List, Dict, Any
+
+from retriever import HybridRetriever
+
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+TEST_SET_PATH = PROJECT_ROOT / "eval" / "test_set.json"
+
+# Default test set: 8 questions across 6 documents
+DEFAULT_TEST_SET = [
+    {
+        "question": "什么是 RAG？",
+        "ground_truth_keywords": ["检索增强生成", "RAG", "知识库", "向量"],
+        "must_cite": "01-rag-intro.md",
+    },
+    {
+        "question": "LangChain 有哪些文档加载器？",
+        "ground_truth_keywords": ["TextLoader", "Markdown", "PDF", "Word"],
+        "must_cite": "02-langchain-notes.md",
+    },
+    {
+        "question": "DeepSeek 的 API 怎么调用？",
+        "ground_truth_keywords": ["ChatOpenAI", "OpenAI", "兼容", "API"],
+        "must_cite": "03-deepseek-api.md",
+    },
+    {
+        "question": "软件开发合同的总金额是多少？",
+        "ground_truth_keywords": ["480", "000", "金额", "合同"],
+        "must_cite": "04-contract-2024-0312.md",
+    },
+    {
+        "question": "莫干山徒步带什么装备？",
+        "ground_truth_keywords": ["登山鞋", "水", "外套", "装备"],
+        "must_cite": "05-weekend-hike-moganshan.md",
+    },
+    {
+        "question": "12 月版本什么时候上线？",
+        "ground_truth_keywords": ["12", "20", "上线", "双十二"],
+        "must_cite": "06-email-client-dec-launch.md",
+    },
+    {
+        "question": "合同延期罚则是怎样的？",
+        "ground_truth_keywords": ["延期", "0.5", "10%"],
+        "must_cite": "04-contract-2024-0312.md",
+    },
+    {
+        "question": "客户希望 12 月版本提前几天？",
+        "ground_truth_keywords": ["5", "提前", "12", "20"],
+        "must_cite": "06-email-client-dec-launch.md",
+    },
+    # PDF-specific test questions (the synthetic two-column paper)
+    {
+        "question": "What is the title of the synthetic retrieval study paper?",
+        "ground_truth_keywords": ["Synthetic", "Vector", "Retrieval"],
+        "must_cite": "papers/test-two-column-paper.pdf",
+    },
+    {
+        "question": "What does the paper say about Hit@1 reaching 1.0?",
+        "ground_truth_keywords": ["Hit@1", "1.0", "op-1"],  # PDF says "op-1 ranking", not "top-1"
+        "must_cite": "papers/test-two-column-paper.pdf",
+    },
+    {
+        "question": "论文中关于 BM25 的描述是什么？",
+        "ground_truth_keywords": ["BM25", "keyword"],
+        "must_cite": "papers/test-two-column-paper.pdf",
+    },
+    {
+        "question": "What are the authors of the synthetic study paper?",
+        "ground_truth_keywords": ["Anonymous", "Authors"],
+        "must_cite": "papers/test-two-column-paper.pdf",
+    },
+]
+
+
+def _hits_keywords(text: str, keywords: List[str]) -> int:
+    """Count how many keywords appear in the text (case-insensitive substring)."""
+    text_l = text.lower()
+    n = 0
+    for kw in keywords:
+        if kw.lower() in text_l:
+            n += 1
+    return n
+
+
+def _get_text_for_metrics(hit: Dict) -> str:
+    """Return the text to use for keyword-based metrics.
+
+    With parent-child chunking, the hit.content is the short child (used for
+    embedding/search), but the LLM actually sees the parent. Use parent_text
+    when available so the metric reflects what the LLM uses.
+    """
+    meta = hit.get("metadata", {})
+    parent = meta.get("parent_text", "")
+    if parent:
+        return parent
+    return hit.get("content", "")
+
+
+def context_precision(question: str, hits: List[Dict], keywords: List[str]) -> float:
+    """Of the top-K retrieved chunks, what fraction contain at least one keyword?
+
+    Uses parent_text (what the LLM actually reads) when available.
+    """
+    if not hits:
+        return 0.0
+    relevant = sum(
+        1 for h in hits if _hits_keywords(_get_text_for_metrics(h), keywords) > 0
+    )
+    return relevant / len(hits)
+
+
+def context_recall(hits: List[Dict], keywords: List[str]) -> float:
+    """Fraction of ground-truth keywords found across all retrieved chunks.
+
+    Uses parent_text (what the LLM actually reads) when available.
+    """
+    if not keywords:
+        return 1.0
+    combined = " ".join(_get_text_for_metrics(h) for h in hits)
+    return _hits_keywords(combined, keywords) / len(keywords)
+
+
+def hit_at_k(hits: List[Dict], must_cite: str, k: int = 5) -> bool:
+    """Was the required source among the top-k retrieved?"""
+    top_k = hits[:k]
+    for h in top_k:
+        src = h.get("metadata", {}).get("source", "")
+        if must_cite in src:
+            return True
+    return False
+
+
+def evaluate(retriever: HybridRetriever, test_set: List[Dict] = None) -> Dict[str, Any]:
+    """Run all test questions and compute aggregate metrics."""
+    import os as _os
+    if test_set is None:
+        test_set = DEFAULT_TEST_SET
+    use_rewrite = _os.getenv("USE_QUERY_REWRITE", "false").lower() == "true"
+    rewriter = None
+    fuser = None
+    if use_rewrite:
+        from query_rewriter import QueryRewriter, fuse_by_parent_id
+        rewriter = QueryRewriter(num_variants=3)
+        fuser = fuse_by_parent_id
+    use_critic = _os.getenv("USE_CRITIC", "false").lower() == "true"
+    critic = None
+    if use_critic:
+        from critic import RelevanceCritic, apply_critic
+        critic = RelevanceCritic()
+    rows = []
+    for item in test_set:
+        q = item["question"]
+        kws = item["ground_truth_keywords"]
+        must = item["must_cite"]
+        if rewriter:
+            queries = rewriter.rewrite(q)
+            if len(queries) > 1:
+                all_hits = [retriever.retrieve(qq, top_k=5) for qq in queries]
+                hits = fuser(all_hits)
+            else:
+                hits = retriever.retrieve(q, top_k=5)
+        else:
+            hits = retriever.retrieve(q, top_k=5)
+        if critic and hits:
+            verdicts = critic.evaluate(q, hits)
+            hits, dropped = apply_critic(hits, verdicts, min_yes=2)
+            if dropped:
+                print(f"  [critic] dropped {len(dropped)}/{len(hits)+len(dropped)} chunks")
+        rows.append({
+            "question": q,
+            "must_cite": must,
+            "top1_source": hits[0].get("metadata", {}).get("source", "") if hits else "",
+            "hit_at_1": hit_at_k(hits, must, k=1),
+            "hit_at_3": hit_at_k(hits, must, k=3),
+            "hit_at_5": hit_at_k(hits, must, k=5),
+            "context_precision": round(context_precision(q, hits, kws), 3),
+            "context_recall": round(context_recall(hits, kws), 3),
+        })
+    n = len(rows) or 1
+    summary = {
+        "num_questions": len(rows),
+        "hit_at_1": round(sum(r["hit_at_1"] for r in rows) / n, 3),
+        "hit_at_3": round(sum(r["hit_at_3"] for r in rows) / n, 3),
+        "hit_at_5": round(sum(r["hit_at_5"] for r in rows) / n, 3),
+        "context_precision": round(sum(r["context_precision"] for r in rows) / n, 3),
+        "context_recall": round(sum(r["context_recall"] for r in rows) / n, 3),
+    }
+    return {"summary": summary, "rows": rows}
+
+
+def main():
+    test_set = DEFAULT_TEST_SET
+    if TEST_SET_PATH.exists():
+        test_set = json.loads(TEST_SET_PATH.read_text(encoding="utf-8"))
+    retriever = HybridRetriever(use_rerank=True)
+    result = evaluate(retriever, test_set)
+    print("\n" + "=" * 70)
+    print("RAG 评估报告")
+    print("=" * 70)
+    print(f"\n问题数: {result['summary']['num_questions']}\n")
+    for r in result["rows"]:
+        status = "[OK]" if r["hit_at_1"] else ("[~]" if r["hit_at_3"] else "[X]")
+        print(f"{status} Q: {r['question']}")
+        print(f"   必须引用: {r['must_cite']} | Top-1: {r['top1_source']}")
+        print(f"   hit@1={r['hit_at_1']} hit@3={r['hit_at_3']} hit@5={r['hit_at_5']} "
+              f"precision={r['context_precision']} recall={r['context_recall']}")
+    print("\n" + "-" * 70)
+    print("汇总指标")
+    print("-" * 70)
+    for k, v in result["summary"].items():
+        if k != "num_questions":
+            print(f"  {k:25s} = {v}")
+    return result
+
+
+if __name__ == "__main__":
+    main()

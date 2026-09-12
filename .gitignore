@@ -1,18 +1,56 @@
-# Python
+# ===== Python =====
 __pycache__/
 *.py[cod]
+*$py.class
+*.so
+.Python
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# ===== 虚拟环境 =====
 venv/
 .venv/
 env/
+ENV/
 
-# 日志
+# ===== 环境变量（含密钥，绝对不能提交）=====
+.env
+.env.local
+.env.*.local
+
+# ===== 日志 =====
 *.log
+logs/
 
-# 数据（按需保留或忽略）
+# ===== 向量数据库（可本地重建）=====
 qdrant_data/
-rag-private-docs/
+*.lock
 
-# 系统
+# ===== 模型缓存 =====
+.cache/
+models/
+*.bin
+*.safetensors
+
+# ===== IDE / 编辑器 =====
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# ===== 操作系统 =====
 .DS_Store
 Thumbs.db
+desktop.ini
 
+# ===== 测试 / 覆盖率 =====
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# ===== Streamlit =====
+.streamlit/secrets.toml

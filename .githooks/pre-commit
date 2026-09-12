@@ -1,0 +1,17 @@
+#!/bin/sh
+# 提交前自动跑测试。失败则阻止 commit。
+# 如果只想快速提交，用 git commit --no-verify 跳过。
+
+echo "[pre-commit] 运行 pytest..."
+if command -v pytest >/dev/null 2>&1; then
+    pytest tests/ -q
+    if [ $? -ne 0 ]; then
+        echo "[pre-commit] 测试未通过，提交被阻止。"
+        echo "[pre-commit] 如确需跳过：git commit --no-verify"
+        exit 1
+    fi
+    echo "[pre-commit] 测试通过"
+else
+    echo "[pre-commit] 未安装 pytest，跳过测试"
+fi
+exit 0

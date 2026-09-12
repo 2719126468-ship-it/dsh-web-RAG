@@ -1,3 +1,5 @@
+# 【旧版脚本，已不推荐使用】日常请用 indexer.py（支持增量索引、更多格式）。
+# 本脚本是早期全量重建实现，保留仅作参考。
 """Document ingestion pipeline.
 
 Reads files from ./docs, splits into chunks, embeds, and stores in local Qdrant.

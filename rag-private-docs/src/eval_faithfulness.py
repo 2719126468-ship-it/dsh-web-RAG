@@ -76,7 +76,13 @@ def evaluate_faithfulness(question: str, answer: str, contexts: List[str]) -> Di
     try:
         data = json.loads(content)
     except json.JSONDecodeError:
-        return {"score": 0.0, "claims": [], "error": "无法解析 LLM 输出", "raw": content[:500]}
+        return {
+            "score": None,
+            "parse_error": True,
+            "claims": [],
+            "error": "无法解析 LLM 输出",
+            "raw": content[:500],
+        }
 
     claims = data.get("claims", [])
     data["unsupported"] = [c["text"] for c in claims if not c.get("supported", False)]
@@ -99,14 +105,16 @@ def evaluate_batch(items: List[Dict]) -> Dict:
             r = evaluate_faithfulness(q, a, ctxs)
             r["question"] = q
             results.append(r)
-            total_score += r.get("score", 0.0)
-            n += 1
+            if r.get("score") is not None:
+                total_score += r["score"]
+                n += 1
         except Exception as e:
             print(f"  ⚠️  失败：{e}")
-            results.append({"question": q, "score": 0.0, "error": str(e)})
+            results.append({"question": q, "score": None, "error": str(e)})
     return {
         "average_faithfulness": round(total_score / n, 4) if n else 0.0,
         "count": n,
+        "parse_failures": sum(1 for r in results if r.get("parse_error") or r.get("score") is None),
         "results": results,
     }
 

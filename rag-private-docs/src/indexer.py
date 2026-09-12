@@ -129,10 +129,10 @@ def load_file(path: Path) -> List:
 
 
 def split_documents(docs, child_size=None, child_overlap=None):
-    """Parent-aware splitter: returns list of (parent_doc, child_chunks).
+    """单级切分：把文档切成固定大小的 chunk。
 
-    For simplicity, here we use a single-level splitter;
-    the small-enough chunks are good for retrieval AND context.
+    注意：真正的 parent-child 双级切分走 USE_PARENT_CHILD 环境变量那条路，
+    调用 parent_child_splitter.build_parent_child()。本函数是默认路径。
     """
     splitter = RecursiveCharacterTextSplitter(
         chunk_size=child_size or config.CHUNK_SIZE,

@@ -381,6 +381,117 @@ v8 修复了 indexer 与 Qdrant 交互中的三个问题：
 
 需要设置 `DEEPSEEK_API_KEY`。输出每条答案的 faithfulness 分数，以及缺乏依据的断言。
 
+## DeepDoc PDF 解析（可选）
+
+默认 PDF 解析器在复杂表格、扫描件、多栏排版上表现有限。切换到 DeepDoc 可以改善。
+
+安装：
+
+    pip install deepdoc-pdfparser
+
+启用：修改 src/config.py
+
+    PDF_PARSER = "deepdoc"
+
+未安装时自动 fallback 到默认解析器，不影响现有功能。
+
+## Excel / CSV 支持
+
+docs/ 目录下可以直接放入 .xlsx 和 .csv 文件，索引器会按行转成文本块：
+
+    列1 | 列2 | 列3
+    值1 | 值2 | 值3
+
+xlsx 用 openpyxl 解析，csv 自动尝试 UTF-8 / GBK 编码。需要装：
+
+    pip install openpyxl
+
+## 可视化工作流面板
+
+src/pipeline_app.py 提供一个独立的流水线可视化面板，用 Tab 分五个阶段：数据源、解析、分块、索引、检索。
+
+运行：
+
+    cd rag-private-docs/src
+    streamlit run pipeline_app.py
+
+不影响原有 streamlit run app.py 的聊天界面。
+
+## RAGAS 评估（可选）
+
+src/eval_ragas.py 用 RAGAS 框架做三指标评估：Faithfulness、Answer Relevancy、Context Recall。
+
+用法：
+
+    pip install ragas datasets
+    python eval_ragas.py eval/test_set.json eval/qa_results.json
+
+结果写入 ragas_results.json。与已有的 eval_faithfulness.py 互补：后者提供断言级细粒度分析，RAGAS 提供聚合分数。
+
+## 多模态解析（可选）
+
+开启后从 PDF 提取图片，调用 VLM 生成描述文本，参与检索。
+
+启用：修改 src/config.py
+
+    ENABLE_MULTIMODAL = True
+    VLM_MODEL = "gpt-4o-mini"
+    VLM_BASE_URL = "https://api.openai.com/v1"
+    VLM_API_KEY = "sk-..."
+
+需要装 PyMuPDF：
+
+    pip install PyMuPDF
+
+可接任何 OpenAI 兼容的 VLM（OpenAI、通义千问 VL、智谱 GLM-4V 等）。每张 PDF 最多处理 20 张图，过滤小于 100x100 的小图。
+
+## 对话记忆（可选）
+
+轻量记忆模块，本地 JSON 存储，零外部依赖。
+
+启用：修改 src/config.py
+
+    ENABLE_MEMORY = True
+
+命令行用法：
+
+    cd rag-private-docs/src
+    python memory_cli.py add "用户偏好用中文回答"
+    python memory_cli.py search "偏好"
+    python memory_cli.py list
+    python memory_cli.py delete mem_xxx
+
+记忆存在 rag-private-docs/memory/memories.json，中英文混合分词检索。
+
+## HTTP API（可选）
+
+src/api.py 基于 FastAPI，把 RAG 暴露为 HTTP 接口。
+
+安装：
+
+    pip install fastapi "uvicorn[standard]"
+
+启动：
+
+    cd rag-private-docs/src
+    uvicorn api:app --host 0.0.0.0 --port 8000
+
+接口：GET /health 健康检查，POST /index 触发索引，POST /query 问答（需先适配 qa.py）。
+
+## Webhook 通知（可选）
+
+索引完成时向指定 URL 发送 POST 请求。
+
+在 src/config.py 里配置：
+
+    WEBHOOK_URL = "https://your-endpoint.com/hook"
+
+发送内容：
+
+    {"event": "index_done", "data": {}, "source": "dsh-web-rag"}
+
+未配置时静默跳过，不影响索引。
+
 ## 常见问题
 
 **Q：装依赖时报网络超时**

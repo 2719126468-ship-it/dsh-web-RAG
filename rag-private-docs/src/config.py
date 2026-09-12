@@ -40,3 +40,6 @@ EMBEDDING_DIM = 512
 QDRANT_MODE = "local"
 QDRANT_URL = "http://localhost:6333"
 QDRANT_API_KEY = ""
+
+# PDF 解析器选择：default 用现有解析器，deepdoc 用 DeepDoc（需额外安装）
+PDF_PARSER = "default"

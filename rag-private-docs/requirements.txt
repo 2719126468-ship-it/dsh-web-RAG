@@ -44,3 +44,9 @@ reportlab>=4.0
 
 # PPTX 支持
 python-pptx>=0.6.23
+
+# Excel 支持
+openpyxl>=3.1.0
+
+# 可选：DeepDoc PDF 解析器（RAGFlow 抽取版），需要时手动安装
+# deepdoc-pdfparser>=0.1.0

@@ -36,6 +36,31 @@ RAG 的解决方案很简单：你问问题时，先从你电脑里找出相关�
 - RAG 像一个"开卷考试"：你把相关的书页翻到它面前，它只能从这些书页里挑答案
 
 
+## 同类项目对比
+
+社区里已有几个 DSH 生态的 RAG 项目，定位各有侧重。下面是简单对比，方便你选型。
+
+| 项目 | 定位 | 核心能力 | 技术栈 | 适合场景 |
+|---|---|---|---|---|
+| **dsh-web-RAG**（本项目） | 独立部署的通用 RAG | 8 种文档格式、混合检索、引用溯源、增量索引、三层评估、可视化面板、多模态、对话记忆、HTTP API | Python + LangChain + Qdrant + DeepSeek | 需要独立部署、深度定制、文档格式多样 |
+| [dsh-knowledge](https://github.com/Soren-ABT/dsh-knowledge) | DSH 企业级知识库插件 | 文档分组、本地 embedding、本地 OCR、混合检索（FTS5 + 向量 + RRF）、管理面板 | Node.js 22+，支持 OpenAI 兼容接口 / Ollama / 本地模型 | 企业级应用，需要管理界面 |
+| [dsh-kb-rag](https://github.com/Breeze136/dsh-kb-rag) | DSH 轻量文献知识库插件 | PDF/Zotero 转带章节结构的 SQLite、混合检索、精排、DOI 一键直达 | Python，完全本地运行 | 学术研究，文献管理 |
+
+**本项目最大的差异**：**独立于 DSH 运行**。它们需要依附 DSH 框架，本项目只需 Python 和 DeepSeek API Key 就能跑，对不想折腾 DSH 的用户更友好。
+
+**本项目在以下方面有优势**：
+
+- **评估体系**：三层评估（基础指标 + 断言级忠实度 + RAGAS），同类项目少见
+- **文档格式**：8 种格式覆盖，同类多聚焦 PDF
+- **工程化**：CI 双版本、Docker、Makefile、Ruff、pre-commit 钩子、Dependabot
+- **扩展性**：可视化面板、多模态、对话记忆、HTTP API 都是可选模块
+
+**本项目在以下方面有差距**：
+
+- **企业功能**：不如 dsh-knowledge 有文档分组、管理面板
+- **学术优化**：不如 dsh-kb-rag 有 Zotero 集成、DOI 直达
+- **生态绑定**：不依附 DSH 是优势，但也意味着不能用 DSH 的插件生态
+
 ## 这个项目能做什么
 
 1. 把你的 .md / .txt / .pdf / .docx 文档读进来

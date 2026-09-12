@@ -47,6 +47,7 @@ RAG 的解决方案很简单：你问问题时，先从你电脑里找出相关�
 
 
 ## 项目文件结构
+```text
 rag-private-docs/
 ├── docs/ 你的文档放这里
 │ ├── 01-rag-intro.md 示例：什么是 RAG
@@ -80,6 +81,7 @@ rag-private-docs/
 ├── TUTORIAL.md 详细教程（手把手）
 ├── README.md 你正在看的这个文件
 └── requirements.txt 依赖库清单
+```
 
 
 ## 怎么用起来
@@ -112,8 +114,8 @@ DeepSeek 是国内的一个大语言模型公司，API Key 就像一把钥匙，
 
 如果装了 git：
 
-git clone https://github.com/你的用户名/rag-private-docs.git
-cd rag-private-docs
+git clone https://github.com/2719126468-ship-it/dsh-web-RAG.git
+cd dsh-web-RAG
 
 如果没装 git，直接从 GitHub 页面下载 ZIP 包，解压后进入该目录。
 

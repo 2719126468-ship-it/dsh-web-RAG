@@ -43,3 +43,10 @@ QDRANT_API_KEY = ""
 
 # PDF 解析器选择：default 用现有解析器，deepdoc 用 DeepDoc（需额外安装）
 PDF_PARSER = "default"
+
+# ========== 多模态（可选）==========
+# 开启后会从 PDF 提取图片，用 VLM 生成描述，参与检索
+ENABLE_MULTIMODAL = False
+VLM_MODEL = "gpt-4o-mini"
+VLM_BASE_URL = ""
+VLM_API_KEY = ""

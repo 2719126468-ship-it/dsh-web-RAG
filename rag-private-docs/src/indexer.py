@@ -100,7 +100,11 @@ def load_file(path: Path) -> List:
                 return result
             print(f"[info] DeepDoc 无结果，fallback 到默认: {path.name}")
         from pdf_parser import parse_pdf
-        return parse_pdf(path)
+        docs = parse_pdf(path)
+        if getattr(config, "ENABLE_MULTIMODAL", False):
+            from multimodal_parser import extract_images_with_captions
+            docs = docs + extract_images_with_captions(path)
+        return docs
     elif suf == ".docx":
         loader = Docx2txtLoader(str(path))
     elif suf == ".pptx":

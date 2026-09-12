@@ -573,6 +573,58 @@ src/api.py 基于 FastAPI，把 RAG 暴露为 HTTP 接口。
 
 本项目定位偏个人使用和学习，企业级需求可参考 dsh-knowledge。
 
+## 设计选择说明
+
+这一节解释几个关键取舍，方便你判断项目是否适合你的场景。
+
+### 为什么用 LangChain
+
+LangChain 确实引入了一层抽象，对简单 RAG 来说有开销。选它的理由：
+
+- 文档加载器、切分器、向量库集成都是现成的，换 embedding 模型或换向量库时改动小
+- 想接 Ollama、通义千问、文心一言，改 base_url 就行
+- 是主流生态，学习资料多
+
+代价是调试链路变长。如果你只需要最简 RAG，裸调 API + 手动管理向量库会更直接，但扩展时要自己写更多代码。
+
+### 为什么 RAGAS 和 eval_faithfulness 并存
+
+两者不是重复，是互补：
+
+- eval_faithfulness.py 逐条检查答案里的每个断言是否有上下文支撑，粒度细，能指出"具体哪句话是编的"
+- eval_ragas.py 用 RAGAS 框架出聚合分数，适合对比不同版本的整体效果
+
+RAGAS 本质是 LLM-as-a-judge，存在主观性和 API 成本。eval_faithfulness 同样依赖 LLM，但输出更结构化，适合调试。两个都开着，按需选用。
+
+### 为什么 .doc 做降级处理
+
+.doc 是微软老的二进制格式，纯 Python 没有可靠解析库。可选项：
+
+- 硬依赖 unstructured：体积大（几百 MB），Termux 和轻量环境装不上
+- 优雅降级：装了就用，没装就提示转 .docx
+
+选了后者，避免为了一个冷门格式拖累整个项目。.docx 是主流格式，转换一次成本很低。
+
+### 为什么独立于 DSH
+
+DSH（DeepSeek Harness）处于 Developer Preview 阶段，官方提示会有兼容性破坏。本项目只把它当作概念参考，运行时完全独立：
+
+- 只需 Python + DeepSeek API Key 就能跑
+- 不受 DSH 版本更新的影响
+- 代价是用不了 DSH 的插件生态
+
+如果你的场景深度依赖 DSH，可以看看 dsh-knowledge 或 dsh-kb-rag。
+
+### 为什么用 Qdrant
+
+选 Qdrant 而不是 Chroma / FAISS / Milvus 的理由：
+
+- 支持本地嵌入式模式（零部署）和 server 模式（生产可用），一个配置项切换
+- Python 客户端成熟，API 清晰
+- 数据点超过 20,000 会警告，这个阈值明确，方便判断何时升级
+
+Chroma 更轻但生产案例少，FAISS 只是索引库需要自己管元数据，Milvus 太重。Qdrant 在个人和轻量生产之间平衡得比较好。
+
 ## 常见问题
 
 **Q：装依赖时报网络超时**

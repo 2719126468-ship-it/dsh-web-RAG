@@ -38,7 +38,7 @@ def test_docs_directory_exists():
 
 def test_config_values():
     pytest.importorskip("dotenv", reason="未安装 python-dotenv")
-    import config
+    from config import config
     assert config.CHUNK_SIZE > 0
     assert config.CHUNK_OVERLAP >= 0
     assert config.CHUNK_OVERLAP < config.CHUNK_SIZE

@@ -55,3 +55,8 @@ VLM_API_KEY = ""
 ENABLE_MEMORY = False
 MEMORY_PATH = "../memory/memories.json"
 MEMORY_TOP_K = 3
+
+# ========== API / Webhook（可选）==========
+API_HOST = "0.0.0.0"
+API_PORT = 8000
+WEBHOOK_URL = ""

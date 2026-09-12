@@ -106,6 +106,17 @@ class RAGEngine:
         context = self.retriever.format_for_llm(hits)
         history_text = format_history(history)
 
+        # 注入用户记忆（可选，config.ENABLE_MEMORY=True 时启用）
+        memory_text = ""
+        if getattr(config, "ENABLE_MEMORY", False):
+            try:
+                from memory import build_memory_context
+                memory_text = build_memory_context(question)
+                if memory_text:
+                    print(f"[info] 已注入 {len(memory_text)} 字符记忆上下文")
+            except Exception as e:
+                print(f"[warn] memory 加载失败，跳过: {e}")
+
         # Build chat messages: system + (optional) history + current
         msgs = [SystemMessage(content=STRICT_SYSTEM_PROMPT)]
         # Add prior conversation (excluding the current question)
@@ -115,6 +126,8 @@ class RAGEngine:
             else:
                 msgs.append(AIMessage(content=m["content"]))
         # Current question with context
+        if memory_text:
+            context = memory_text + "\n\n" + context
         current = USER_TEMPLATE.format(
             context=context, history=history_text, question=question
         )

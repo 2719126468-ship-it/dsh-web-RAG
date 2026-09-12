@@ -61,24 +61,24 @@ if FastAPI is not None:
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"索引失败：{e}")
 
+    _engine_holder = {"engine": None}
+
+    def _get_engine():
+        if _engine_holder["engine"] is None:
+            from qa import RAGEngine
+            _engine_holder["engine"] = RAGEngine()
+        return _engine_holder["engine"]
+
     @app.post("/query", response_model=QueryResponse)
     def query(req: QueryRequest):
         try:
-            from qa import answer_question
-        except ImportError:
-            raise HTTPException(
-                status_code=501,
-                detail="qa 模块接口未适配，请根据 qa.py 实际函数名调整 /query 实现",
+            engine = _get_engine()
+            result = engine.query(req.question, top_k=req.top_k)
+            return QueryResponse(
+                answer=result.get("answer", ""),
+                sources=result.get("sources", []),
+                confidence=result.get("confidence", 0.0),
             )
-        try:
-            result = answer_question(req.question, top_k=req.top_k)
-            if isinstance(result, dict):
-                return QueryResponse(
-                    answer=result.get("answer", ""),
-                    sources=result.get("sources", []),
-                    confidence=result.get("confidence", 0.0),
-                )
-            return QueryResponse(answer=str(result))
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"查询失败：{e}")
 else:

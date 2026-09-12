@@ -29,6 +29,25 @@ def load_json(path: str) -> list:
         return json.load(f)
 
 
+def _extract_contexts(item: Dict) -> List[str]:
+    """从 QA 结果里提取上下文文本，兼容两种格式。
+
+    格式 A（显式）：{"contexts": ["...", "..."]}
+    格式 B（qa.py 输出）：{"sources": [{"snippet": ..., "context": ...}, ...]}
+
+    优先用 context（原文上下文），退而用 snippet。
+    """
+    if item.get("contexts"):
+        return item["contexts"]
+    sources = item.get("sources", [])
+    out = []
+    for s in sources:
+        text = s.get("context") or s.get("snippet") or ""
+        if text:
+            out.append(text)
+    return out
+
+
 def build_dataset(test_set: List[Dict], qa_results: List[Dict]):
     from datasets import Dataset
 
@@ -36,10 +55,18 @@ def build_dataset(test_set: List[Dict], qa_results: List[Dict]):
         print(f"[warn] 测试集 {len(test_set)} 条，结果 {len(qa_results)} 条，数量不一致，按较短的截断")
     n = min(len(test_set), len(qa_results))
 
+    contexts_all = [_extract_contexts(qa_results[i]) for i in range(n)]
+    empty_count = sum(1 for c in contexts_all if not c)
+    if empty_count == n:
+        print(f"[warn] 所有 {n} 条结果的 contexts 都为空。")
+        print(f"[warn] 检查输入格式：应含 'contexts' 或 'sources' 字段。")
+    elif empty_count > 0:
+        print(f"[warn] {empty_count}/{n} 条结果的 contexts 为空，这些条目的 RAGAS 分数会失真。")
+
     data = {
         "question": [test_set[i]["question"] for i in range(n)],
         "answer": [qa_results[i].get("answer", "") for i in range(n)],
-        "contexts": [qa_results[i].get("contexts", []) for i in range(n)],
+        "contexts": contexts_all,
         "ground_truth": [
             test_set[i].get("ground_truth", "") or
             " ".join(test_set[i].get("ground_truth_keywords", []))

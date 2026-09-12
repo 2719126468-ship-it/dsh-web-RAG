@@ -132,12 +132,15 @@ def main():
     print()
     print("=" * 50)
     print(f"平均 Faithfulness: {summary['average_faithfulness']}")
-    print(f"评估条数: {summary['count']}")
+    print(f"评估条数: {summary['count']}（解析失败 {summary.get('parse_failures', 0)} 条）")
     print("=" * 50)
     for r in summary["results"]:
         q = r.get("question", "")[:40]
-        s = r.get("score", 0.0)
-        print(f"  {q}... score={s:.2f}")
+        s = r.get("score")
+        if s is None:
+            print(f"  {q}... score=解析失败")
+        else:
+            print(f"  {q}... score={s:.2f}")
         for u in r.get("unsupported", []):
             print(f"    ❌ 无依据: {u[:60]}")
     with open("faithfulness_results.json", "w", encoding="utf-8") as f:

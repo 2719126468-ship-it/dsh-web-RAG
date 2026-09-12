@@ -16,14 +16,14 @@ class Config:
 
     # ========== Embeddings ==========
     EMBEDDING_MODEL: str = os.getenv("EMBEDDING_MODEL", "BAAI/bge-small-zh-v1.5")
-    EMBEDDING_DIM: int = 512
+    EMBEDDING_DIM: int = int(os.getenv("EMBEDDING_DIM", "512"))
 
     # ========== Qdrant ==========
     QDRANT_PATH: str = os.getenv("QDRANT_PATH", "./qdrant_data")
     COLLECTION_NAME: str = os.getenv("COLLECTION_NAME", "private_docs")
-    QDRANT_MODE: str = "local"
-    QDRANT_URL: str = "http://localhost:6333"
-    QDRANT_API_KEY: str = ""
+    QDRANT_MODE: str = os.getenv("QDRANT_MODE", "local")
+    QDRANT_URL: str = os.getenv("QDRANT_URL", "http://localhost:6333")
+    QDRANT_API_KEY: str = os.getenv("QDRANT_API_KEY", "")
 
     # ========== Chunking ==========
     CHUNK_SIZE: int = 500

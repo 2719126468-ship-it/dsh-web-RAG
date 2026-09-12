@@ -2,7 +2,6 @@
 import streamlit as st
 from pathlib import Path
 
-from pathlib import Path
 from qa import RAGEngine, CONFIDENCE_THRESHOLD
 from outline import build_outline_tree, find_heading_at_line, snippet_with_context
 

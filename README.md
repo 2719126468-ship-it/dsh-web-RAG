@@ -384,18 +384,6 @@ v7 发现了三个关键 bug 并修复，retriever 池现在干净了：
 
 注意：v6 阶段曾测出 context_precision 1.0，但当时 Qdrant 集合已有 88-220 个重复点，属污染数据。清干净后（v7）为 0.9，这才是真实性能。如果以后想保持集合干净（44 点），按 v8 的经验跑 `indexer.py --force`。
 
-## 升级日志（v9 最新）
-
-v9 在 v8 基础上扩展了六大能力，所有新功能默认关闭，按需开启。
-
-1. **文档格式扩展**：新增 .xlsx / .csv（按行转文本）、.doc（优雅降级）、.pptx（按页提取）。
-2. **DeepDoc PDF 解析器**：config.PDF_PARSER = "deepdoc" 可切换，未安装自动 fallback。
-3. **可视化工作流面板**：src/pipeline_app.py，五 Tab 流水线（数据源/解析/分块/索引/检索）。
-4. **RAGAS 评估**：src/eval_ragas.py，三指标（Faithfulness / Answer Relevancy / Context Recall）。
-5. **多模态解析**：PDF 提图 + VLM 生成描述，config.ENABLE_MULTIMODAL = True 开启。
-6. **轻量对话记忆**：src/memory.py + memory_cli.py，本地 JSON 存储，零外部依赖。
-7. **HTTP API + Webhook**：src/api.py（FastAPI）+ src/webhook.py，索引完成自动通知。
-
 ## 升级日志（v8）
 
 v8 修复了 indexer 与 Qdrant 交互中的三个问题：
@@ -413,6 +401,18 @@ v8 修复了 indexer 与 Qdrant 交互中的三个问题：
 | 删除文档后向量残留 | 有（静默失败） | 无 |
 | Windows force 锁文件 | 偶发 | 解决 |
 | 换 embedding 模型 | 需改源码 | 改 config 即可 |
+
+## 升级日志（v9 最新）
+
+v9 在 v8 基础上扩展了六大能力，所有新功能默认关闭，按需开启。
+
+1. **文档格式扩展**：新增 .xlsx / .csv（按行转文本）、.doc（优雅降级）、.pptx（按页提取）。
+2. **DeepDoc PDF 解析器**：config.PDF_PARSER = "deepdoc" 可切换，未安装自动 fallback。
+3. **可视化工作流面板**：src/pipeline_app.py，五 Tab 流水线（数据源/解析/分块/索引/检索）。
+4. **RAGAS 评估**：src/eval_ragas.py，三指标（Faithfulness / Answer Relevancy / Context Recall）。
+5. **多模态解析**：PDF 提图 + VLM 生成描述，config.ENABLE_MULTIMODAL = True 开启。
+6. **轻量对话记忆**：src/memory.py + memory_cli.py，本地 JSON 存储，零外部依赖。
+7. **HTTP API + Webhook**：src/api.py（FastAPI）+ src/webhook.py，索引完成自动通知。
 
 ## Qdrant 部署模式
 

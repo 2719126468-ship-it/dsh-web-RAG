@@ -54,3 +54,7 @@ htmlcov/
 
 # ===== Streamlit =====
 .streamlit/secrets.toml
+
+# 临时调试脚本
+*.bat
+*.ps1

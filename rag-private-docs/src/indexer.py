@@ -223,7 +223,7 @@ class IncrementalIndexer:
             self.client = None
             self.store = None
             gc.collect()  # Ensure Python GC releases handles
-            if QDRANT_PATH.exists():
+            if getattr(config, "QDRANT_MODE", "local").lower() == "local" and QDRANT_PATH.exists():
                 try:
                     shutil.rmtree(QDRANT_PATH)
                     print(f"[info] Force reindex: removed {QDRANT_PATH}, will rebuild from scratch")

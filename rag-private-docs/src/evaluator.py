@@ -218,7 +218,7 @@ def evaluate(retriever: HybridRetriever, test_set: List[Dict] = None) -> Dict[st
                 if dropped:
                     print(f"  [critic] dropped {len(dropped)}/{len(hits)} chunks")
                 hits = filtered
-        row_confidence = hits[0].get("confidence", 0.0) if hits else 0.0
+        row_confidence = max_confidence(hits)
         expect_reject = item.get("expect_reject", False)
         reject_correct = None
         if expect_reject:

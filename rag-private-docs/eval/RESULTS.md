@@ -305,3 +305,44 @@ dev 集已经被调过多轮。holdout 才是真实泛化信号。但在修完 1
 - 本轮原始数据：`eval/results/2026-09-13T06-46-59.json`
 - dev 集：`eval/test_set.json`（15 条）
 - holdout 集：`eval/test_set_holdout.json`（7 条）
+
+## 2026-09-13 晚：reject_correct 口径修复（防御性）
+
+### 改动
+
+`evaluator.py` 的 `reject_correct` 从 `hits[0].confidence` 改为 `max_confidence(hits)`。
+
+**为什么改**：`qa.py` 用 `max_conf = max(...)` 判拒答，evaluator 用 `hits[0].confidence`——两个口径不一致。`hits[0]` 是按 `rerank_score` 排的，不是按 `confidence` 排的（confidence = 0.8*rerank + 0.2*rrf，混合后可能打破排序）。
+
+### 实测
+
+- 正样本 9 条：confidence 未变
+- 负样本 12 条：4 条变化，8 条未变
+
+变化条目（全部仍在低分拒答区）：
+
+| 问题 | 旧 | 新 |
+|---|---|---|
+| 公司年假 | 0.1949 | 0.2001 |
+| Python GIL | 0.1870 | 0.2000 |
+| Nginx | 0.1892 | 0.2000 |
+| 团队绩效 | 0.1854 | 0.2000 |
+
+`reject_accuracy` 仍为 0.667，未翻转。
+
+### 结论
+
+**旧口径在本次测试集上未造成误判，但埋了雷**。
+
+- 变化 4 条距阈值 0.30 尚有 0.10 余量，不翻转
+- 但 `hits[0].confidence ≤ max_confidence(hits)` 恒成立——将来任何样本的 `hits[0]` 与 `max` 跨越 0.30 时，就会误判
+- 本次修复是**防御性**，不是修实伤
+
+### 附带发现
+
+0.20 = `0.8*0 + 0.2*1.0`，说明有 chunk 的 reranker 给 0 分但 rrf 归一化 = 1.0。confidence 公式的触底值就是 0.2，不是 0。
+
+### 下一步
+
+- Qdrant 远程（0.2917）仍是当前最脆弱样本，距阈值仅 0.0083
+- 不急于改动，记录在案

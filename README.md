@@ -17,7 +17,7 @@
 |---|---|
 | 开源协议 | MIT（见 [LICENSE](LICENSE)） |
 | CI | GitHub Actions，Python 3.11 / 3.12 双版本 |
-| 测试 | pytest，48 个用例（本地全绿；CI 环境只跑 4 个结构测试 + 5 个跳过 + 39 个未收集）|
+| 测试 | pytest，48 个用例（CI：44 passed, 4 skipped；本地依赖完整时全绿）|
 | 容器化 | Dockerfile + .dockerignore + docker.yml |
 | 一键安装 | sh install.sh |
 | 健康检查 | sh diagnose.sh |

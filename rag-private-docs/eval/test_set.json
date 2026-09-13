@@ -141,5 +141,35 @@
     "ground_truth_keywords": [],
     "must_cite": "__none__",
     "expect_reject": true
+  },
+  {
+    "question": "合同的违约金是多少？",
+    "ground_truth_keywords": [],
+    "must_cite": "__none__",
+    "expect_reject": true
+  },
+  {
+    "question": "莫干山的海拔是多少？",
+    "ground_truth_keywords": [],
+    "must_cite": "__none__",
+    "expect_reject": true
+  },
+  {
+    "question": "DeepSeek 模型有多少参数？",
+    "ground_truth_keywords": [],
+    "must_cite": "__none__",
+    "expect_reject": true
+  },
+  {
+    "question": "LangChain 和 LlamaIndex 有什么区别？",
+    "ground_truth_keywords": [],
+    "must_cite": "__none__",
+    "expect_reject": true
+  },
+  {
+    "question": "12 月版本的具体功能清单是什么？",
+    "ground_truth_keywords": [],
+    "must_cite": "__none__",
+    "expect_reject": true
   }
 ]

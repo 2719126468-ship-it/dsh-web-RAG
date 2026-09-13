@@ -26,13 +26,12 @@ import json
 
 # ── 1. Collection size check ──────────────────────────────────────────────────
 
-def check_collection():
+def check_collection(r):
     from retriever import HybridRetriever
     from config import config
     from qdrant_client import QdrantClient
     from pathlib import Path as P
 
-    r = HybridRetriever()
     coll_name = r.client.get_collections().collections[0].name
     count_result = r.client.get_collection(coll_name)
     total_points = count_result.points_count
@@ -62,9 +61,8 @@ def check_collection():
 
 # ── 2. Retrieval spot checks ─────────────────────────────────────────────────
 
-def check_bm25():
+def check_bm25(r):
     from retriever import HybridRetriever
-    r = HybridRetriever()
 
     q = "BM25 hybrid retrieval RAG"
     hits = r._bm25_search(q, top_n=5)
@@ -72,9 +70,8 @@ def check_bm25():
           f"(score={hits[0].get('bm25_score', 0):.3f})")
     return True
 
-def check_dense():
+def check_dense(r):
     from retriever import HybridRetriever
-    r = HybridRetriever()
 
     q = "BM25 hybrid retrieval RAG"
     hits = r._dense_search(q, top_n=5)
@@ -82,9 +79,8 @@ def check_dense():
           f"(score={hits[0].get('dense_score', 0):.4f})")
     return True
 
-def check_hybrid():
+def check_hybrid(r):
     from retriever import HybridRetriever
-    r = HybridRetriever()
 
     q = "BM25 hybrid retrieval"
     hits = r.retrieve(q, top_k=3)
@@ -92,9 +88,8 @@ def check_hybrid():
     print(f"  [OK] Hybrid retrieval: top-3 conf = {[f'{c:.3f}' for c in confs]}")
     return all(0 <= c <= 1 for c in confs)
 
-def check_reranker():
+def check_reranker(r):
     from retriever import HybridRetriever
-    r = HybridRetriever()
 
     q = "BM25 hybrid retrieval"
     hits = r._bm25_search(q, top_n=10)
@@ -115,9 +110,8 @@ def check_reranker():
 
 # ── 3. Mini evaluator ─────────────────────────────────────────────────────────
 
-def check_mini_eval():
+def check_mini_eval(r):
     from retriever import HybridRetriever
-    r = HybridRetriever()
 
     # 3 key questions from the test set
     questions = [
@@ -147,6 +141,9 @@ def main():
     print("=" * 60)
     print()
 
+    from retriever import HybridRetriever
+    r = HybridRetriever()
+
     checks = [
         ("1. Qdrant Collection", check_collection),
         ("2. BM25 Search", check_bm25),
@@ -160,7 +157,7 @@ def main():
     for name, fn in checks:
         print(f"[{name}]")
         try:
-            results[name] = fn()
+            results[name] = fn(r)
         except Exception as e:
             print(f"  [ERROR] {e}")
             results[name] = False

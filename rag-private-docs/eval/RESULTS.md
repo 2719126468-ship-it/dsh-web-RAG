@@ -224,3 +224,84 @@ critic 保留了 2 个 chunk，判为 YES。它认为"文档里有 12 月发布�
 
 - 本轮原始数据：`eval/results/2026-09-13T06-23-45.json`
 - 5 轮数据可在 `eval/results/` 下按时间戳找到
+
+## 2026-09-13 傍晚：dev/holdout 分离后的第一轮
+
+测试集已切分：dev（9 正 + 6 负 = 15）/ holdout（3 正 + 4 负 = 7）。
+
+### 本轮改动
+
+1. `critic.py` prompt 改成明确区分「含答案」vs「话题相关」
+2. `evaluator.py` 全丢兜底改成：保留 top-1，confidence × 0.3
+
+### 结果（dev 集）
+
+| 指标 | 值 |
+|---|---|
+| num_positive | 9 |
+| num_negative | 6 |
+| hit_at_1 | 1.0 |
+| context_precision | 0.719 |
+| reject_accuracy | **0.833**（5/6） |
+
+失败 1 条：合同违约金（confidence 0.4244）
+
+### 两个新发现
+
+**发现 1：hit@1 和真实体验错位**
+
+`evaluator.py` 的 `hit_at_k` 只看 `must_cite` 是否在 `metadata.source` 里——**完全不看 confidence**。
+
+例：论文作者（正样本）
+
+| 视角 | 结果 |
+|---|---|
+| evaluator | hit@1 = true（来源文件对） |
+| qa.py（真实用户） | confidence 0.18 < 0.30 → 拒答 |
+
+**真实用户会看到"资料中未找到"，但评估说 1.0。**
+
+这是评估体系和用户体验的脱节。**hit@1 只能测"检索排序"，不能测"系统会不会真的回答"。**
+
+影响：论文作者（0.1832）、论文 BM25（0.4066）虽然 hit@1=true，但 confidence 都低于 0.5，如果阈值提高，会被误拒。
+
+**发现 2：critic 判定不稳定**
+
+合同违约金三次结果：
+
+| 时间 | confidence | 结果 |
+|---|---|---|
+| 06-10-25 | 0.8489 | 失败 |
+| 06-23-45 | 0.1234 | 成功 |
+| 06-46-59 | 0.4244 | 失败 |
+
+**同一份数据、同一份 prompt、temperature=0.0，结果三次不同。**
+
+LLM critic 有随机性。这意味着：
+
+- 单次评估的 reject_accuracy 不可靠
+- 需要跑多次取平均，或
+- critic 不能作为唯一的拒答判断依据
+
+### 下次优先做的事（顺序变了）
+
+**1. 修 hit@1 的定义**（比 holdout 更根本）
+
+现在：只测 source 是否命中
+应该：source 命中 **且** confidence ≥ 阈值（即用户真的会看到答案）
+
+这个改动会让 hit@1 从"检索指标"变成"端到端指标"，更贴近真实体验。
+
+**2. 评估 critic 的稳定性**
+
+对同一份数据跑 3 次，看 reject_accuracy 波动范围。如果波动 > 0.15，critic 需要换方案（比如固定 seed、或用更稳定的 prompt）。
+
+**3. 跑 holdout 验证泛化**（排在最后）
+
+dev 集已经被调过多轮。holdout 才是真实泛化信号。但在修完 1、2 之前，holdout 的结果也无法完全信任。
+
+### 参考
+
+- 本轮原始数据：`eval/results/2026-09-13T06-46-59.json`
+- dev 集：`eval/test_set.json`（15 条）
+- holdout 集：`eval/test_set_holdout.json`（7 条）

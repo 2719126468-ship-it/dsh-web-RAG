@@ -1,0 +1,49 @@
+name: Manual Eval
+
+on:
+  workflow_dispatch:
+
+jobs:
+  eval:
+    runs-on: ubuntu-latest
+    continue-on-error: true
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r rag-private-docs/requirements.txt
+
+      - name: Check env
+        run: |
+          echo "PWD: $(pwd)"
+          ls rag-private-docs/
+          if [ -f rag-private-docs/.env.example ]; then
+            cp rag-private-docs/.env.example rag-private-docs/.env
+          fi
+
+      - name: Run indexer
+        env:
+          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+        run: |
+          cd rag-private-docs/src
+          python indexer.py --force
+
+      - name: Run evaluator
+        env:
+          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+        run: |
+          cd rag-private-docs/src
+          python evaluator.py --save
+
+      - name: Show eval result
+        run: |
+          find rag-private-docs/eval/results -name "*.json" -exec cat {} \;

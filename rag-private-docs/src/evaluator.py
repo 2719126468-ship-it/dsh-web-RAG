@@ -152,6 +152,26 @@ def hit_at_k(hits: List[Dict], must_cite: str, k: int = 5) -> bool:
     return False
 
 
+def max_confidence(hits: List[Dict]) -> float:
+    """Highest confidence across all hits (matches qa.py's rejection logic)."""
+    if not hits:
+        return 0.0
+    return max((h.get("confidence", 0.0) for h in hits), default=0.0)
+
+
+def answer_hit_at_k(hits: List[Dict], must_cite: str, k: int,
+                    confidence_threshold: float) -> bool:
+    """User-experience view: will the system actually answer with the right source?
+
+    True only if (a) the required source is in top-k AND (b) max confidence
+    across hits >= threshold. This mirrors what qa.py does: if max_conf is
+    below the threshold, it replies "not found" regardless of source.
+    """
+    if max_confidence(hits) < confidence_threshold:
+        return False
+    return hit_at_k(hits, must_cite, k)
+
+
 def evaluate(retriever: HybridRetriever, test_set: List[Dict] = None) -> Dict[str, Any]:
     """Run all test questions and compute aggregate metrics."""
     import os as _os
@@ -213,6 +233,9 @@ def evaluate(retriever: HybridRetriever, test_set: List[Dict] = None) -> Dict[st
             "hit_at_1": hit_at_k(hits, must, k=1),
             "hit_at_3": hit_at_k(hits, must, k=3),
             "hit_at_5": hit_at_k(hits, must, k=5),
+            "answer_hit_at_1": answer_hit_at_k(hits, must, 1, CONFIDENCE_THRESHOLD_FOR_EVAL),
+            "answer_hit_at_3": answer_hit_at_k(hits, must, 3, CONFIDENCE_THRESHOLD_FOR_EVAL),
+            "answer_hit_at_5": answer_hit_at_k(hits, must, 5, CONFIDENCE_THRESHOLD_FOR_EVAL),
             "context_precision": round(context_precision(q, hits, kws), 3),
             "context_recall": round(context_recall(hits, kws), 3),
         })

@@ -27,4 +27,13 @@ jobs:
           DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
         run: |
           cd rag-private-docs/src
-          python evaluator.py || echo "评估未完成（可能缺 API Key 或依赖）"
+          python evaluator.py --save || echo "评估未完成（可能缺 API Key 或依赖）"
+
+      - name: Upload eval result
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: eval-result
+          path: rag-private-docs/eval/results/*.json
+          if-no-files-found: warn
+          retention-days: 30

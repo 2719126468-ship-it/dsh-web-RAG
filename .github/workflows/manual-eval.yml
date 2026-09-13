@@ -30,11 +30,6 @@ jobs:
             cp rag-private-docs/.env.example rag-private-docs/.env
           fi
 
-      - name: Logit check
-        run: |
-          cd rag-private-docs/src
-          python3 -c "from sentence_transformers import CrossEncoder; m = CrossEncoder('BAAI/bge-reranker-base'); scores = m.predict([['合同金额是多少', '合同总金额为人民币肆拾捌万元'], ['合同金额是多少', '今天天气很好适合出门散步']]); print(f'scores = {scores}'); print(f'min = {min(scores):.4f}, max = {max(scores):.4f}'); print('[conclusion] logit, need sigmoid' if min(scores) < 0 or max(scores) > 1 else '[conclusion] already normalized')"
-
       - name: Run indexer
         env:
           DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}

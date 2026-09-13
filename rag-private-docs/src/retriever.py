@@ -220,13 +220,14 @@ class HybridRetriever:
         # (hybrid retrieval authority). This gives the reranker dominant weight while
         # preserving document-level signal from the RRF score.
         if final and "rerank_score" in final[0]:
-            max_rerank = max(c.get("rerank_score", 0) for c in final)
             max_rrf = max(c.get("rrf_score", 0) for c in final)
             for c in final:
-                r_score = c.get("rerank_score", 0) / max_rerank if max_rerank > 0 else 0
+                # rerank_score 已是 0-1 概率（BGE-reranker-base 输出）
+                # 直接用原始分数，不除以 max——除法会抹掉绝对置信度
+                r_prob = c.get("rerank_score", 0)
                 rf = c.get("rrf_score", 0) / max_rrf if max_rrf > 0 else 0
-                # 80% rerank, 20% rrf — reranker dominates, RRF provides doc authority
-                c["confidence"] = 0.8 * r_score + 0.2 * rf
+                # 80% rerank, 20% rrf — reranker dominates
+                c["confidence"] = 0.8 * r_prob + 0.2 * rf
         else:
             for c in final:
                 c["confidence"] = min(1.0, c.get("rrf_score", 0) * 10)

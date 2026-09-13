@@ -6,7 +6,6 @@ on:
 jobs:
   eval:
     runs-on: ubuntu-latest
-    continue-on-error: true
 
     steps:
       - name: Checkout
@@ -40,13 +39,20 @@ jobs:
       - name: Run evaluator
         env:
           DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+          USE_CRITIC: "true"
         run: |
           cd rag-private-docs/src
           python evaluator.py --save
 
       - name: Show eval result
         run: |
-          find rag-private-docs/eval/results -name "*.json" -exec cat {} \;
+          latest=$(ls -t rag-private-docs/eval/results/*.json 2>/dev/null | head -1)
+          if [ -n "$latest" ]; then
+            echo "Latest: $latest"
+            cat "$latest"
+          else
+            echo "(no results found)"
+          fi
 
       - name: Upload eval result
         if: always()

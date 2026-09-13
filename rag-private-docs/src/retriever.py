@@ -154,17 +154,17 @@ class HybridRetriever:
         return results
 
     def _dense_search(self, query: str, top_n: int = 20) -> List[Dict[str, Any]]:
-        # Use Qdrant direct search to get scores
-        from qdrant_client.models import SearchRequest
         query_vector = self.embeddings.embed_query(query)
-        results = self.client.search(
+        # qdrant-client >= 1.10 推荐用 query_points 替代已弃用的 search
+        response = self.client.query_points(
             collection_name=config.COLLECTION_NAME,
-            query_vector=query_vector,
+            query=query_vector,
             limit=top_n,
             with_payload=True,
         )
+        points = getattr(response, "points", response)
         out = []
-        for r in results:
+        for r in points:
             payload = r.payload or {}
             out.append({
                 "id": str(r.id),

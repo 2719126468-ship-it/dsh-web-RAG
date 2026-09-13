@@ -27,7 +27,6 @@ import json
 # ── 1. Collection size check ──────────────────────────────────────────────────
 
 def check_collection(r):
-    from retriever import HybridRetriever
     from config import config
     from qdrant_client import QdrantClient
     from pathlib import Path as P
@@ -62,7 +61,6 @@ def check_collection(r):
 # ── 2. Retrieval spot checks ─────────────────────────────────────────────────
 
 def check_bm25(r):
-    from retriever import HybridRetriever
 
     q = "BM25 hybrid retrieval RAG"
     hits = r._bm25_search(q, top_n=5)
@@ -71,7 +69,6 @@ def check_bm25(r):
     return True
 
 def check_dense(r):
-    from retriever import HybridRetriever
 
     q = "BM25 hybrid retrieval RAG"
     hits = r._dense_search(q, top_n=5)
@@ -80,7 +77,6 @@ def check_dense(r):
     return True
 
 def check_hybrid(r):
-    from retriever import HybridRetriever
 
     q = "BM25 hybrid retrieval"
     hits = r.retrieve(q, top_k=3)
@@ -89,7 +85,6 @@ def check_hybrid(r):
     return all(0 <= c <= 1 for c in confs)
 
 def check_reranker(r):
-    from retriever import HybridRetriever
 
     q = "BM25 hybrid retrieval"
     hits = r._bm25_search(q, top_n=10)
@@ -111,7 +106,6 @@ def check_reranker(r):
 # ── 3. Mini evaluator ─────────────────────────────────────────────────────────
 
 def check_mini_eval(r):
-    from retriever import HybridRetriever
 
     # 3 key questions from the test set
     questions = [

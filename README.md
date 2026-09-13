@@ -17,7 +17,7 @@
 |---|---|
 | 开源协议 | MIT（见 [LICENSE](LICENSE)） |
 | CI | GitHub Actions，Python 3.11 / 3.12 双版本 |
-| 测试 | pytest，48 个用例，全绿 |
+| 测试 | pytest，48 个用例（本地全绿；CI 环境只跑 4 个结构测试 + 5 个跳过 + 39 个未收集）|
 | 容器化 | Dockerfile + .dockerignore + docker.yml |
 | 一键安装 | sh install.sh |
 | 健康检查 | sh diagnose.sh |
@@ -702,7 +702,7 @@ Chroma 更轻但生产案例少，FAISS 只是索引库需要自己管元数据�
 
 当知识库里没有答案、但问题与文档话题相关时，reranker 仍会给高分。
 
-实测（12 正 + 10 负）：
+实测（早期 12 正 + 10 负；当前 test_set 已调整为 9 正 + 12 负）：
 
 - 正样本 confidence 范围：0.37 ~ 0.99（实际最高 0.9988）
 - 成功拒答的负样本：0.18 ~ 0.23

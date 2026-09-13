@@ -297,7 +297,6 @@ python src/watcher.py
     ...
 
     汇总指标
-      num_questions            = 17
       num_positive             = 12
       num_negative             = 5
       hit_at_1                 = 1.0

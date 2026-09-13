@@ -240,11 +240,24 @@ class IncrementalIndexer:
             QDRANT_PATH.mkdir(parents=True, exist_ok=True)
             # Recreate client and collection fresh
             self.client = create_qdrant_client()
+
+            # force 语义：无论 local 还是 server 模式，都必须清空 collection。
+            # - local 模式：上面的 shutil.rmtree 已删数据，collection 通常已不存在
+            # - server 模式：rmtree 只删本地目录，远程集合需显式删除
+            if self.client.collection_exists(config.COLLECTION_NAME):
+                try:
+                    self.client.delete_collection(config.COLLECTION_NAME)
+                    print(f"[info] Deleted existing collection for force reindex")
+                except Exception as e:
+                    print(f"[warn] delete_collection failed: {e}")
+
             if not self.client.collection_exists(config.COLLECTION_NAME):
                 self.client.create_collection(
                     collection_name=config.COLLECTION_NAME,
                     vectors_config=models.VectorParams(size=config.EMBEDDING_DIM, distance=models.Distance.COSINE),
                 )
+            else:
+                print(f"[warn] Collection still exists after force; may accumulate")
             self.store = None
             self.manifest = {}  # Clear manifest since we're rebuilding
             print("[info] Collection recreated")

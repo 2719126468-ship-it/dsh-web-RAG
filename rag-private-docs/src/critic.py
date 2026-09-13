@@ -108,11 +108,16 @@ class RelevanceCritic:
         return verdicts[: len(hits)]
 
 
-def apply_critic(hits: List[Dict], verdicts: List[str], min_yes: int = 2) -> Tuple[List[Dict], List[Dict]]:
+def apply_critic(hits: List[Dict], verdicts: List[str], min_yes: int = 2, maybe_penalty: float = 0.5) -> Tuple[List[Dict], List[Dict]]:
     """Apply verdicts to hits.
 
     Returns (kept, dropped) where kept is the filtered list and dropped
     is the chunks we removed (kept around for debugging).
+
+    MAYBE chunks are kept (they are topically relevant) but their confidence
+    is multiplied by maybe_penalty to reflect that critic did not see a
+    direct answer. This lets the confidence threshold actually act on
+    "topic related but no answer" cases.
     """
     if len(hits) != len(verdicts):
         return hits, []
@@ -123,12 +128,18 @@ def apply_critic(hits: List[Dict], verdicts: List[str], min_yes: int = 2) -> Tup
         if v == "NO":
             dropped.append(h)
         elif v == "MAYBE":
+            h["confidence"] = h.get("confidence", 0.0) * maybe_penalty
+            h["critic_verdict"] = "MAYBE"
             maybe.append(h)
         else:  # YES
+            h["critic_verdict"] = "YES"
             kept.append(h)
+    n_maybe = len(maybe)
     if len(kept) < min_yes:
         kept = kept + maybe
         maybe = []
+    if n_maybe > 0:
+        print(f"  [critic] MAYBE {n_maybe}/{len(verdicts)} chunks, penalty={maybe_penalty}")
     return kept + maybe, dropped
 
 

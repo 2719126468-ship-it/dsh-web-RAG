@@ -259,6 +259,18 @@ class IncrementalIndexer:
 
         # Handle new/changed files
         if to_ingest:
+            # Delete old points for changed files first, to prevent accumulation.
+            # Reason: store.add_documents uses uuid4, so re-ingesting the same
+            # file creates NEW points without removing the old ones.
+            # force=True skips this because the collection was just recreated.
+            if not force:
+                changed_srcs = [
+                    str(path.relative_to(PROJECT_ROOT)).replace(chr(92), "/")
+                    for path in to_ingest
+                ]
+                n_cleared = remove_deleted_from_store(self.client, changed_srcs)
+                print(f"[info] Cleared old points for {n_cleared} changed sources")
+
             print(f"[info] Loading & splitting {len(to_ingest)} files...")
             all_chunks = []
             use_pc = os.getenv("USE_PARENT_CHILD", "false").lower() == "true"

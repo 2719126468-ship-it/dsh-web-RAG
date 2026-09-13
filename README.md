@@ -280,25 +280,90 @@ python src/watcher.py
 
 ## 怎么知道系统准不准？
 
-cd src
-python evaluator.py
+项目内置了评估脚本，可以量化检索质量。
 
-会输出一张表格，例如：
+### 基础评估
 
-问题数: 8
-hit_at_1  = 1.0    每个问题的 Top-1 检索结果都命中了预设关键词
-context_precision = 0.825  返回的段落中真正相关的比例
-context_recall    = 1.0    应该召回的相关段落全被找回来了
+    cd src
+    python evaluator.py
+
+输出示例（17 条：12 正 + 5 负）：
+
+    问题数: 17
+
+    [OK] Q: 什么是 RAG？
+       必须引用: 01-rag-intro.md | Top-1: docs/01-rag-intro.md
+       hit@1=True hit@3=True hit@5=True precision=0.8 recall=1.0
+    ...
+
+    汇总指标
+      num_questions            = 17
+      num_positive             = 12
+      num_negative             = 5
+      hit_at_1                 = 1.0
+      hit_at_3                 = 1.0
+      hit_at_5                 = 1.0
+      context_precision        = 0.567
+      context_recall           = 1.0
+      reject_accuracy          = 1.0
 
 **指标含义**：
-- **hit_at_1**：对每个问题，取检索结果的第一段，检查它是否包含预设的"正确答案关键词"。如果包含，该问题计 1 分。最终得分 = 命中数 / 总问题数。1.0 表示完美。
-- **context_precision**：返回的所有段落里，真正相关的比例（精度）。
-- **context_recall**：所有应该被找到的相关段落中，实际被召回的比例（召回率）。
 
-调参方向见 `src/config.py`：
+- **hit_at_1 / 3 / 5**：每个问题的 Top-K 检索结果里，是否包含期望引用的源文件。1.0 表示全部命中。
+- **context_precision**：返回的所有段落里，真正相关的比例。注意这是关键词子串匹配，不是严格的语义相关性。
+- **context_recall**：所有预设关键词中，被召回的比例。
+- **reject_accuracy**：负样本里正确拒答的比例（见下方"负样本测试"）。
+
+### 负样本测试（拒答能力）
+
+知识库里没有答案的问题，系统应该拒答，而不是编造。
+
+在 `eval/test_set.json` 里加带 `expect_reject: true` 的问题：
+
+    {
+      "question": "公司年假有多少天？",
+      "ground_truth_keywords": [],
+      "must_cite": "__none__",
+      "expect_reject": true
+    }
+
+再跑 `python evaluator.py`，输出会多两个字段：
+
+    num_positive     = 12
+    num_negative     = 5
+    reject_accuracy  = 1.0
+
+**reject_accuracy**：正确拒答的负样本比例。拒答由 `qa.py` 的 `CONFIDENCE_THRESHOLD`（默认 0.30）判断——top-1 的 confidence 低于这个值，就回复"资料中未找到相关内容"。
+
+如果 `reject_accuracy` 偏低，说明 confidence 普遍偏高，或阈值不合适。
+
+### 保存结果与对比
+
+加 `--save` 参数，每次评估结果会存到 `eval/results/时间戳.json`：
+
+    python evaluator.py --save
+
+跑完两次后，用 `compare.py` 对比：
+
+    python compare.py --latest
+
+输出示例：
+
+    指标                      之前         之后         变化
+    hit_at_1               1.0000     1.0000 =  0.0000
+    context_precision      0.5670     0.6000 ↑  0.0330
+    context_recall         1.0000     1.0000 =  0.0000
+
+**这是数据驱动调参的基础**：改一个参数，跑一次评估，对比变化。
+
+### 调参方向
+
+参数见 `src/config.py`：
+
 - `CHUNK_SIZE`（默认 500）：每段字符数。调大则上下文更全但检索变粗；调小则检索更精但上下文可能不足。
 - `CHUNK_OVERLAP`（默认 80）：相邻段重叠字符数，避免切断关键信息。
 - `TOP_K`（默认 5）：返回给 AI 的段落数。调大则覆盖更全但噪声增多；调小则更精准但可能漏内容。
+- `CONFIDENCE_THRESHOLD`（`qa.py`，默认 0.30）：拒答阈值。调高则更保守但可能误拒；调低则更愿意回答但可能编造。
 
 
 ## 它的工作原理（简化版）

@@ -39,7 +39,7 @@ jobs:
       - name: Run evaluator
         env:
           DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
-          USE_CRITIC: "true"
+          USE_CRITIC: "false"
         run: |
           cd rag-private-docs/src
           python evaluator.py --save

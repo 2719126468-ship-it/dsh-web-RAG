@@ -11,6 +11,7 @@ Usage:
   python src/evaluator.py
   python src/evaluator.py --save     # 保存结果到 eval/results/
 """
+import sys
 import json
 import re
 from pathlib import Path
@@ -20,6 +21,7 @@ from retriever import HybridRetriever
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 TEST_SET_PATH = PROJECT_ROOT / "eval" / "test_set.json"
+HOLDOUT_SET_PATH = PROJECT_ROOT / "eval" / "test_set_holdout.json"
 
 # Must stay in sync with qa.py's CONFIDENCE_THRESHOLD.
 # Negative samples (expect_reject=True) are "correct" when their top-1
@@ -251,11 +253,22 @@ def main():
     import argparse
     parser = argparse.ArgumentParser(description="RAG 评估")
     parser.add_argument("--save", action="store_true", help="保存结果到 eval/results/")
+    parser.add_argument("--holdout", action="store_true",
+                        help="使用 hold-out 集，而不是调参集")
     args = parser.parse_args()
 
+    if args.holdout:
+        path = HOLDOUT_SET_PATH
+        print(f"[info] 使用 hold-out 集：{path}")
+    else:
+        path = TEST_SET_PATH
+        print(f"[info] 使用调参集：{path}")
+
     test_set = DEFAULT_TEST_SET
-    if TEST_SET_PATH.exists():
-        test_set = json.loads(TEST_SET_PATH.read_text(encoding="utf-8"))
+    if path.exists():
+        test_set = json.loads(path.read_text(encoding="utf-8"))
+    else:
+        print(f"[warn] {path} 不存在，回退到硬编码 DEFAULT_TEST_SET")
     retriever = HybridRetriever(use_rerank=True)
     result = evaluate(retriever, test_set)
     print("\n" + "=" * 70)

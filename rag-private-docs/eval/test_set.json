@@ -40,16 +40,6 @@
     "must_cite": "04-contract-2024-0312.md"
   },
   {
-    "question": "莫干山徒步带什么装备？",
-    "ground_truth_keywords": [
-      "登山鞋",
-      "水",
-      "外套",
-      "装备"
-    ],
-    "must_cite": "05-weekend-hike-moganshan.md"
-  },
-  {
     "question": "12 月版本什么时候上线？",
     "ground_truth_keywords": [
       "12",
@@ -60,15 +50,6 @@
     "must_cite": "06-email-client-dec-launch.md"
   },
   {
-    "question": "合同延期罚则是怎样的？",
-    "ground_truth_keywords": [
-      "延期",
-      "0.5",
-      "10%"
-    ],
-    "must_cite": "04-contract-2024-0312.md"
-  },
-  {
     "question": "客户希望 12 月版本提前几天？",
     "ground_truth_keywords": [
       "5",
@@ -77,15 +58,6 @@
       "20"
     ],
     "must_cite": "06-email-client-dec-launch.md"
-  },
-  {
-    "question": "What is the title of the synthetic retrieval study paper?",
-    "ground_truth_keywords": [
-      "Synthetic",
-      "Vector",
-      "Retrieval"
-    ],
-    "must_cite": "papers/test-two-column-paper.pdf"
   },
   {
     "question": "What does the paper say about Hit@1 reaching 1.0?",
@@ -125,12 +97,6 @@
     "expect_reject": true
   },
   {
-    "question": "北京到上海的高铁需要多久？",
-    "ground_truth_keywords": [],
-    "must_cite": "__none__",
-    "expect_reject": true
-  },
-  {
     "question": "How to configure Nginx reverse proxy?",
     "ground_truth_keywords": [],
     "must_cite": "__none__",
@@ -149,25 +115,7 @@
     "expect_reject": true
   },
   {
-    "question": "莫干山的海拔是多少？",
-    "ground_truth_keywords": [],
-    "must_cite": "__none__",
-    "expect_reject": true
-  },
-  {
     "question": "DeepSeek 模型有多少参数？",
-    "ground_truth_keywords": [],
-    "must_cite": "__none__",
-    "expect_reject": true
-  },
-  {
-    "question": "LangChain 和 LlamaIndex 有什么区别？",
-    "ground_truth_keywords": [],
-    "must_cite": "__none__",
-    "expect_reject": true
-  },
-  {
-    "question": "12 月版本的具体功能清单是什么？",
     "ground_truth_keywords": [],
     "must_cite": "__none__",
     "expect_reject": true

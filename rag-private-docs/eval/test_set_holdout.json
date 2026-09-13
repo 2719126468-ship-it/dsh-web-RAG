@@ -1,0 +1,54 @@
+[
+  {
+    "question": "莫干山徒步带什么装备？",
+    "ground_truth_keywords": [
+      "登山鞋",
+      "水",
+      "外套",
+      "装备"
+    ],
+    "must_cite": "05-weekend-hike-moganshan.md"
+  },
+  {
+    "question": "合同延期罚则是怎样的？",
+    "ground_truth_keywords": [
+      "延期",
+      "0.5",
+      "10%"
+    ],
+    "must_cite": "04-contract-2024-0312.md"
+  },
+  {
+    "question": "What is the title of the synthetic retrieval study paper?",
+    "ground_truth_keywords": [
+      "Synthetic",
+      "Vector",
+      "Retrieval"
+    ],
+    "must_cite": "papers/test-two-column-paper.pdf"
+  },
+  {
+    "question": "北京到上海的高铁需要多久？",
+    "ground_truth_keywords": [],
+    "must_cite": "__none__",
+    "expect_reject": true
+  },
+  {
+    "question": "莫干山的海拔是多少？",
+    "ground_truth_keywords": [],
+    "must_cite": "__none__",
+    "expect_reject": true
+  },
+  {
+    "question": "LangChain 和 LlamaIndex 有什么区别？",
+    "ground_truth_keywords": [],
+    "must_cite": "__none__",
+    "expect_reject": true
+  },
+  {
+    "question": "12 月版本的具体功能清单是什么？",
+    "ground_truth_keywords": [],
+    "must_cite": "__none__",
+    "expect_reject": true
+  }
+]

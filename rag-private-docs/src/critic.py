@@ -25,11 +25,15 @@ from langchain_core.prompts import ChatPromptTemplate
 EVAL_PROMPT = """You are evaluating whether a retrieved document chunk is relevant to a user's question.
 
 For each chunk, output a single token on its own line:
-  YES  -- the chunk contains facts that help answer the question
-  NO   -- the chunk is clearly unrelated
-  MAYBE-- the chunk is topically related but does not directly answer
+  YES   -- the chunk contains facts that directly help answer the question
+  MAYBE -- the chunk is topically related (same domain, subject, or entity)
+           but does not directly answer the question
+  NO    -- the chunk is from a completely different topic
 
-Be strict. "NO" if the chunk is from a different topic entirely.
+Important: be lenient. When in doubt, prefer MAYBE over NO.
+Use NO only when the chunk is clearly about a different subject.
+A chunk that mentions any entity or term from the question is at least MAYBE.
+
 Output only YES / NO / MAYBE, one per line, in the same order.
 
 Question: {question}

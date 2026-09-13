@@ -255,6 +255,9 @@ def evaluate(retriever: HybridRetriever, test_set: List[Dict] = None) -> Dict[st
     if negative_rows:
         correct = sum(1 for r in negative_rows if r.get("reject_correct"))
         summary["reject_accuracy"] = round(correct / len(negative_rows), 3)
+    summary["answer_hit_at_1"] = round(sum(r["answer_hit_at_1"] for r in positive_rows) / len(positive_rows), 3) if positive_rows else 0.0
+    summary["answer_hit_at_3"] = round(sum(r["answer_hit_at_3"] for r in positive_rows) / len(positive_rows), 3) if positive_rows else 0.0
+    summary["answer_hit_at_5"] = round(sum(r["answer_hit_at_5"] for r in positive_rows) / len(positive_rows), 3) if positive_rows else 0.0
     return {"summary": summary, "rows": rows}
 
 

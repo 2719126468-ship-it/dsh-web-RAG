@@ -22,14 +22,20 @@ from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate
 
 
-EVAL_PROMPT = """You are evaluating whether a retrieved document chunk is relevant to a user's question.
+EVAL_PROMPT = """You are evaluating whether a retrieved document chunk contains the answer to a user's question.
 
 For each chunk, output a single token on its own line:
-  YES  -- the chunk contains facts that help answer the question
-  NO   -- the chunk is clearly unrelated
-  MAYBE-- the chunk is topically related but does not directly answer
+  YES   -- the chunk contains the SPECIFIC fact or data the question asks for
+  MAYBE -- the chunk is topically related but does NOT contain the specific answer
+  NO    -- the chunk is from a completely different topic
 
-Be strict. "NO" if the chunk is from a different topic entirely.
+Key distinction:
+- Question asks "合同延期罚则", chunk says "延期罚则是 0.5%" -> YES (contains the fact)
+- Question asks "合同违约金", chunk mentions "延期罚则" but no "违约金" -> MAYBE (related topic, no answer)
+- Question asks "公司年假", chunk is about contracts -> NO (different topic)
+
+Use MAYBE generously. Use NO only when the chunk is clearly off-topic.
+
 Output only YES / NO / MAYBE, one per line, in the same order.
 
 Question: {question}

@@ -187,8 +187,13 @@ def evaluate(retriever: HybridRetriever, test_set: List[Dict] = None) -> Dict[st
             verdicts = critic.evaluate(q, hits)
             filtered, dropped = apply_critic(hits, verdicts, min_yes=2)
             if not filtered:
-                print(f"  [warn] critic dropped all {len(hits)} chunks for: {q[:50]}")
-                print(f"  [warn] falling back to unfiltered hits to avoid zero score")
+                # critic 全判 NO：保留 rerank top-1，但 confidence × 0.3
+                top = max(hits, key=lambda x: x.get("confidence", 0))
+                top["confidence"] = top.get("confidence", 0.0) * 0.3
+                top["critic_verdict"] = "ALL_NO_PENALTY"
+                print(f"  [critic] dropped all {len(hits)} chunks for: {q[:50]}")
+                print(f"  [critic] keeping top-1 with confidence × 0.3 -> {top.get('confidence', 0):.4f}")
+                hits = [top]
             else:
                 if dropped:
                     print(f"  [critic] dropped {len(dropped)}/{len(hits)} chunks")

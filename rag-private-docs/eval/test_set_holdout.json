@@ -47,8 +47,12 @@
   },
   {
     "question": "12 月版本的具体功能清单是什么？",
-    "ground_truth_keywords": [],
-    "must_cite": "__none__",
-    "expect_reject": true
+    "ground_truth_keywords": [
+      "会员积分",
+      "微信支付",
+      "客服 IM",
+      "深色模式"
+    ],
+    "must_cite": "06-email-client-dec-launch.md"
   }
 ]

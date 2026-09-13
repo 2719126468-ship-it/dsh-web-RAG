@@ -119,5 +119,41 @@
     "ground_truth_keywords": [],
     "must_cite": "__none__",
     "expect_reject": true
+  },
+  {
+    "question": "合同的签字人是谁？",
+    "ground_truth_keywords": [],
+    "must_cite": "__none__",
+    "expect_reject": true
+  },
+  {
+    "question": "合同是否允许转包？",
+    "ground_truth_keywords": [],
+    "must_cite": "__none__",
+    "expect_reject": true
+  },
+  {
+    "question": "RAG 有哪些缺点？",
+    "ground_truth_keywords": [],
+    "must_cite": "__none__",
+    "expect_reject": true
+  },
+  {
+    "question": "Qdrant 怎么配置远程 server？",
+    "ground_truth_keywords": [],
+    "must_cite": "__none__",
+    "expect_reject": true
+  },
+  {
+    "question": "DeepSeek API 的 QPS 限制是多少？",
+    "ground_truth_keywords": [],
+    "must_cite": "__none__",
+    "expect_reject": true
+  },
+  {
+    "question": "莫干山徒步路线全长多少公里？",
+    "ground_truth_keywords": [],
+    "must_cite": "__none__",
+    "expect_reject": true
   }
 ]

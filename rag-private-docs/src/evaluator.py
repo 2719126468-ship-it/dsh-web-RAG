@@ -21,6 +21,11 @@ from retriever import HybridRetriever
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 TEST_SET_PATH = PROJECT_ROOT / "eval" / "test_set.json"
 
+# Must stay in sync with qa.py's CONFIDENCE_THRESHOLD.
+# Negative samples (expect_reject=True) are "correct" when their top-1
+# confidence falls below this threshold.
+CONFIDENCE_THRESHOLD_FOR_EVAL = 0.30
+
 # Default test set: 8 questions across 6 documents
 DEFAULT_TEST_SET = [
     {
@@ -186,9 +191,17 @@ def evaluate(retriever: HybridRetriever, test_set: List[Dict] = None) -> Dict[st
                 if dropped:
                     print(f"  [critic] dropped {len(dropped)}/{len(hits)} chunks")
                 hits = filtered
+        row_confidence = hits[0].get("confidence", 0.0) if hits else 0.0
+        expect_reject = item.get("expect_reject", False)
+        reject_correct = None
+        if expect_reject:
+            reject_correct = row_confidence < CONFIDENCE_THRESHOLD_FOR_EVAL
         rows.append({
             "question": q,
             "must_cite": must,
+            "expect_reject": expect_reject,
+            "confidence": round(row_confidence, 4),
+            "reject_correct": reject_correct,
             "top1_source": hits[0].get("metadata", {}).get("source", "") if hits else "",
             "hit_at_1": hit_at_k(hits, must, k=1),
             "hit_at_3": hit_at_k(hits, must, k=3),
@@ -196,15 +209,22 @@ def evaluate(retriever: HybridRetriever, test_set: List[Dict] = None) -> Dict[st
             "context_precision": round(context_precision(q, hits, kws), 3),
             "context_recall": round(context_recall(hits, kws), 3),
         })
-    n = len(rows) or 1
+    positive_rows = [r for r in rows if not r.get("expect_reject")]
+    negative_rows = [r for r in rows if r.get("expect_reject")]
+    n_pos = len(positive_rows) or 1
     summary = {
         "num_questions": len(rows),
-        "hit_at_1": round(sum(r["hit_at_1"] for r in rows) / n, 3),
-        "hit_at_3": round(sum(r["hit_at_3"] for r in rows) / n, 3),
-        "hit_at_5": round(sum(r["hit_at_5"] for r in rows) / n, 3),
-        "context_precision": round(sum(r["context_precision"] for r in rows) / n, 3),
-        "context_recall": round(sum(r["context_recall"] for r in rows) / n, 3),
+        "num_positive": len(positive_rows),
+        "num_negative": len(negative_rows),
+        "hit_at_1": round(sum(r["hit_at_1"] for r in positive_rows) / n_pos, 3) if positive_rows else 0.0,
+        "hit_at_3": round(sum(r["hit_at_3"] for r in positive_rows) / n_pos, 3) if positive_rows else 0.0,
+        "hit_at_5": round(sum(r["hit_at_5"] for r in positive_rows) / n_pos, 3) if positive_rows else 0.0,
+        "context_precision": round(sum(r["context_precision"] for r in positive_rows) / n_pos, 3) if positive_rows else 0.0,
+        "context_recall": round(sum(r["context_recall"] for r in positive_rows) / n_pos, 3) if positive_rows else 0.0,
     }
+    if negative_rows:
+        correct = sum(1 for r in negative_rows if r.get("reject_correct"))
+        summary["reject_accuracy"] = round(correct / len(negative_rows), 3)
     return {"summary": summary, "rows": rows}
 
 

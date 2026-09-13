@@ -1,0 +1,145 @@
+[
+  {
+    "question": "什么是 RAG？",
+    "ground_truth_keywords": [
+      "检索增强生成",
+      "RAG",
+      "知识库",
+      "向量"
+    ],
+    "must_cite": "01-rag-intro.md"
+  },
+  {
+    "question": "LangChain 有哪些文档加载器？",
+    "ground_truth_keywords": [
+      "TextLoader",
+      "Markdown",
+      "PDF",
+      "Word"
+    ],
+    "must_cite": "02-langchain-notes.md"
+  },
+  {
+    "question": "DeepSeek 的 API 怎么调用？",
+    "ground_truth_keywords": [
+      "ChatOpenAI",
+      "OpenAI",
+      "兼容",
+      "API"
+    ],
+    "must_cite": "03-deepseek-api.md"
+  },
+  {
+    "question": "软件开发合同的总金额是多少？",
+    "ground_truth_keywords": [
+      "480",
+      "000",
+      "金额",
+      "合同"
+    ],
+    "must_cite": "04-contract-2024-0312.md"
+  },
+  {
+    "question": "莫干山徒步带什么装备？",
+    "ground_truth_keywords": [
+      "登山鞋",
+      "水",
+      "外套",
+      "装备"
+    ],
+    "must_cite": "05-weekend-hike-moganshan.md"
+  },
+  {
+    "question": "12 月版本什么时候上线？",
+    "ground_truth_keywords": [
+      "12",
+      "20",
+      "上线",
+      "双十二"
+    ],
+    "must_cite": "06-email-client-dec-launch.md"
+  },
+  {
+    "question": "合同延期罚则是怎样的？",
+    "ground_truth_keywords": [
+      "延期",
+      "0.5",
+      "10%"
+    ],
+    "must_cite": "04-contract-2024-0312.md"
+  },
+  {
+    "question": "客户希望 12 月版本提前几天？",
+    "ground_truth_keywords": [
+      "5",
+      "提前",
+      "12",
+      "20"
+    ],
+    "must_cite": "06-email-client-dec-launch.md"
+  },
+  {
+    "question": "What is the title of the synthetic retrieval study paper?",
+    "ground_truth_keywords": [
+      "Synthetic",
+      "Vector",
+      "Retrieval"
+    ],
+    "must_cite": "papers/test-two-column-paper.pdf"
+  },
+  {
+    "question": "What does the paper say about Hit@1 reaching 1.0?",
+    "ground_truth_keywords": [
+      "Hit@1",
+      "1.0",
+      "op-1"
+    ],
+    "must_cite": "papers/test-two-column-paper.pdf"
+  },
+  {
+    "question": "论文中关于 BM25 的描述是什么？",
+    "ground_truth_keywords": [
+      "BM25",
+      "keyword"
+    ],
+    "must_cite": "papers/test-two-column-paper.pdf"
+  },
+  {
+    "question": "What are the authors of the synthetic study paper?",
+    "ground_truth_keywords": [
+      "Anonymous",
+      "Authors"
+    ],
+    "must_cite": "papers/test-two-column-paper.pdf"
+  },
+  {
+    "question": "公司年假有多少天？",
+    "ground_truth_keywords": [],
+    "must_cite": "__none__",
+    "expect_reject": true
+  },
+  {
+    "question": "Python 的 GIL 是什么？",
+    "ground_truth_keywords": [],
+    "must_cite": "__none__",
+    "expect_reject": true
+  },
+  {
+    "question": "北京到上海的高铁需要多久？",
+    "ground_truth_keywords": [],
+    "must_cite": "__none__",
+    "expect_reject": true
+  },
+  {
+    "question": "How to configure Nginx reverse proxy?",
+    "ground_truth_keywords": [],
+    "must_cite": "__none__",
+    "expect_reject": true
+  },
+  {
+    "question": "团队成员的绩效评分标准是什么？",
+    "ground_truth_keywords": [],
+    "must_cite": "__none__",
+    "expect_reject": true
+  }
+]

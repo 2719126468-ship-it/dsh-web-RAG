@@ -636,7 +636,7 @@ src/api.py 基于 FastAPI，把 RAG 暴露为 HTTP 接口。
 
 **并发**：Streamlit 单实例适合个人，多用户场景建议用 api.py（FastAPI）+ 反向代理，支持并发请求。
 
-**容器化**：用 Dockerfile 构建镜像，配合 docker-compose 挂载 qdrant_data 和 .env。
+**容器化**：用 Dockerfile 构建镜像，配合 Docker Compose 挂载 qdrant_data 和 .env。
 
 **监控**：目前无内置监控，建议在生产环境加日志收集（如 Loki）。
 
@@ -814,18 +814,49 @@ Windows 用户如果没有 make，可以装 Git Bash 或直接看 Makefile 里�
 
 ## Docker 部署
 
-如果不想在本地配 Python 环境，可以用 Docker 一条命令跑起来：
+如果不想在本地配 Python 环境，用 Docker 一条命令跑起来。
 
-    # 1. 在 rag-private-docs/.env 里配好 DEEPSEEK_API_KEY
-    # 2. 构建镜像
+### 方式一：docker compose（推荐）
+
+    # 1. 准备 .env
+    cp rag-private-docs/.env.example rag-private-docs/.env
+    # 编辑 .env，填入 DEEPSEEK_API_KEY
+
+    # 2. 启动
+    docker compose up -d
+
+    # 3. 首次需要建索引（容器内执行）
+    docker compose exec rag python indexer.py --force
+
+浏览器打开 http://localhost:8501 。
+
+`docker-compose.yml` 会挂载三个目录，容器重启不丢数据：
+
+- `rag-private-docs/docs`：你的文档
+- `rag-private-docs/qdrant_data`：向量索引
+- `rag-private-docs/memory`：对话记忆
+
+### 方式二：docker run
+
+    # 1. 构建镜像
     docker build -t dsh-web-rag .
 
-    # 3. 运行
-    docker run --rm -p 8501:8501 --env-file rag-private-docs/.env dsh-web-rag
+    # 2. 运行
+    docker run --rm -p 8501:8501 \
+      --env-file rag-private-docs/.env \
+      -v $(pwd)/rag-private-docs/docs:/app/rag-private-docs/docs \
+      -v $(pwd)/rag-private-docs/qdrant_data:/app/rag-private-docs/qdrant_data \
+      -v $(pwd)/rag-private-docs/memory:/app/rag-private-docs/memory \
+      dsh-web-rag
 
-然后浏览器打开 http://localhost:8501 。
+两种方式都挂载同样的三个目录：文档、向量索引、对话记忆。
 
-注意：Docker 镜像默认不含你的 qdrant_data 索引，首次运行需要在容器里建索引，或者把本地的 qdrant_data 挂载进去。
+### 说明
+
+- 镜像基于 `python:3.11-slim`，首次构建会装依赖，需要几分钟。
+- `HF_ENDPOINT=https://hf-mirror.com` 已写在 `docker-compose.yml` 里，加速 BGE 模型下载。
+- 索引数据存在挂载卷里，删容器不会丢。
+
 
 ## 协议
 

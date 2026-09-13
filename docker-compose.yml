@@ -1,0 +1,16 @@
+services:
+  rag:
+    build: .
+    image: dsh-web-rag:latest
+    container_name: dsh-web-rag
+    ports:
+      - "8501:8501"
+    volumes:
+      - ./rag-private-docs/docs:/app/rag-private-docs/docs
+      - ./rag-private-docs/qdrant_data:/app/rag-private-docs/qdrant_data
+      - ./rag-private-docs/memory:/app/rag-private-docs/memory
+    env_file:
+      - ./rag-private-docs/.env
+    environment:
+      - HF_ENDPOINT=https://hf-mirror.com
+    restart: unless-stopped

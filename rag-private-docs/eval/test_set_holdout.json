@@ -1,58 +1,65 @@
 [
   {
-    "question": "莫干山徒步带什么装备？",
-    "ground_truth_keywords": [
-      "登山鞋",
-      "水",
-      "外套",
-      "装备"
-    ],
-    "must_cite": "05-weekend-hike-moganshan.md"
+    "id": "q_offsite_location",
+    "question": "2025 Q1 战略会在哪里开的？",
+    "ground_truth_keywords": ["西溪", "杭州"],
+    "must_cite": "h1-team-offsite-2025.md",
+    "expect_reject": false,
+    "negative_type": null,
+    "difficulty": "easy"
   },
   {
-    "question": "合同延期罚则是怎样的？",
-    "ground_truth_keywords": [
-      "延期",
-      "0.5",
-      "10%"
-    ],
-    "must_cite": "04-contract-2024-0312.md"
+    "id": "q_q1_dev_budget",
+    "question": "2025 Q1 研发预算是多少？",
+    "ground_truth_keywords": ["200 万", "200万"],
+    "must_cite": "h2-budget-q1-2025.md",
+    "expect_reject": false,
+    "negative_type": null,
+    "difficulty": "easy"
   },
   {
-    "question": "What is the title of the synthetic retrieval study paper?",
-    "ground_truth_keywords": [
-      "Synthetic",
-      "Vector",
-      "Retrieval"
-    ],
-    "must_cite": "papers/test-two-column-paper.pdf"
+    "id": "q_incident_root_cause",
+    "question": "2025 年 2 月订单服务故障的根本原因是什么？",
+    "ground_truth_keywords": ["连接池", "数据库"],
+    "must_cite": "h3-incident-postmortem.md",
+    "expect_reject": false,
+    "negative_type": null,
+    "difficulty": "medium"
   },
   {
-    "question": "北京到上海的高铁需要多久？",
+    "id": "n_dl_training",
+    "question": "如何训练一个深度学习模型？",
     "ground_truth_keywords": [],
     "must_cite": "__none__",
-    "expect_reject": true
+    "expect_reject": true,
+    "negative_type": "off_topic",
+    "difficulty": "easy"
   },
   {
-    "question": "莫干山的海拔是多少？",
+    "id": "n_k8s_vs_docker",
+    "question": "Docker 和 Kubernetes 有什么区别？",
     "ground_truth_keywords": [],
     "must_cite": "__none__",
-    "expect_reject": true
+    "expect_reject": true,
+    "negative_type": "off_topic",
+    "difficulty": "easy"
   },
   {
-    "question": "LangChain 和 LlamaIndex 有什么区别？",
+    "id": "n_offsite_attendees",
+    "question": "战略会的参会人名单是谁？",
     "ground_truth_keywords": [],
     "must_cite": "__none__",
-    "expect_reject": true
+    "expect_reject": true,
+    "negative_type": "topic_relevant_no_answer",
+    "difficulty": "hard"
   },
   {
-    "question": "12 月版本的具体功能清单是什么？",
-    "ground_truth_keywords": [
-      "会员积分",
-      "微信支付",
-      "客服 IM",
-      "深色模式"
-    ],
-    "must_cite": "06-email-client-dec-launch.md"
+    "id": "n_incident_user_count",
+    "question": "订单服务故障影响了多少用户？",
+    "ground_truth_keywords": [],
+    "must_cite": "__none__",
+    "expect_reject": true,
+    "negative_type": "topic_relevant_no_answer",
+    "difficulty": "hard"
   }
 ]

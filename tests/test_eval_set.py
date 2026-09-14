@@ -44,10 +44,6 @@ def test_expect_reject_has_empty_keywords(test_set):
             assert q["ground_truth_keywords"] == [], f"负样本不应有关键词 ({q['id']})"
 
 
-@pytest.mark.xfail(
-    reason="holdout 与 dev 共享 papers/test-two-column-paper.pdf，待重建 holdout 集",
-    strict=False,
-)
 def test_holdout_docs_disjoint_from_dev():
     dev = json.loads((EVAL / "test_set.json").read_text(encoding="utf-8"))
     hold = json.loads((EVAL / "test_set_holdout.json").read_text(encoding="utf-8"))

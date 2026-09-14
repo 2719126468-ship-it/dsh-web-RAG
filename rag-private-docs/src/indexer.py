@@ -129,29 +129,6 @@ def _load_file_impl(path: Path) -> List:
     return []
 
 
-def _clear_sources(client, rels: List[str]) -> int:
-    """Delete all points whose source is in rels."""
-    if not rels:
-        return 0
-    try:
-        flt = models.Filter(
-            must=[
-                models.FieldCondition(
-                    key="metadata.source",
-                    match=models.MatchAny(any=rels),
-                )
-            ]
-        )
-        client.delete(
-            collection_name=config.COLLECTION_NAME,
-            points_selector=models.FilterSelector(filter=flt),
-        )
-        return len(rels)
-    except Exception as e:
-        print(f"[warn] Could not clear sources: {e}")
-        return 0
-
-
 
 def split_documents(docs, child_size=None, child_overlap=None):
     """单级切分：把文档切成固定大小的 chunk。

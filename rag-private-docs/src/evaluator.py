@@ -270,7 +270,7 @@ def evaluate(retriever: HybridRetriever, test_set: List[Dict] = None) -> Dict[st
             summary["reject_accuracy_" + t] = round(correct / len(rs), 3)
             summary["num_negative_" + t] = len(rs)
 
-return {"summary": summary, "rows": rows}
+    return {"summary": summary, "rows": rows}
 
 
 def _save_result(result):

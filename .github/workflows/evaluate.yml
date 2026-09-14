@@ -21,6 +21,13 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r rag-private-docs/requirements.txt || echo "部分依赖安装失败，继续"
 
+      - name: Build index
+        env:
+          HF_ENDPOINT: https://hf-mirror.com
+        run: |
+          cd rag-private-docs/src
+          python indexer.py --force
+
       - name: Run evaluator (需要 DEEPSEEK_API_KEY)
         env:
           DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}

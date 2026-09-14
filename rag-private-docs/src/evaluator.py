@@ -229,6 +229,7 @@ def evaluate(retriever: HybridRetriever, test_set: List[Dict] = None) -> Dict[st
             "expect_reject": expect_reject,
             "confidence": round(row_confidence, 4),
             "reject_correct": reject_correct,
+            "negative_type": item.get("negative_type"),
             "top1_source": hits[0].get("metadata", {}).get("source", "") if hits else "",
             "hit_at_1": hit_at_k(hits, must, k=1),
             "hit_at_3": hit_at_k(hits, must, k=3),
@@ -258,7 +259,18 @@ def evaluate(retriever: HybridRetriever, test_set: List[Dict] = None) -> Dict[st
     summary["answer_hit_at_1"] = round(sum(r["answer_hit_at_1"] for r in positive_rows) / len(positive_rows), 3) if positive_rows else 0.0
     summary["answer_hit_at_3"] = round(sum(r["answer_hit_at_3"] for r in positive_rows) / len(positive_rows), 3) if positive_rows else 0.0
     summary["answer_hit_at_5"] = round(sum(r["answer_hit_at_5"] for r in positive_rows) / len(positive_rows), 3) if positive_rows else 0.0
-    return {"summary": summary, "rows": rows}
+        # 按 negative_type 分层统计（Part A）
+    if negative_rows:
+        by_type = {}
+        for r in negative_rows:
+            t = r.get("negative_type") or "untyped"
+            by_type.setdefault(t, []).append(r)
+        for t, rs in by_type.items():
+            correct = sum(1 for r in rs if r.get("reject_correct"))
+            summary["reject_accuracy_" + t] = round(correct / len(rs), 3)
+            summary["num_negative_" + t] = len(rs)
+
+return {"summary": summary, "rows": rows}
 
 
 def _save_result(result):

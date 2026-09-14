@@ -1,159 +1,220 @@
 [
   {
+    "id": "q_什么是_RAG",
     "question": "什么是 RAG？",
     "ground_truth_keywords": [
       "检索增强生成",
       "RAG",
-      "知识库",
-      "向量"
+      "向量数据库"
     ],
-    "must_cite": "01-rag-intro.md"
+    "must_cite": "01-rag-intro.md",
+    "expect_reject": false,
+    "negative_type": null,
+    "difficulty": "easy"
   },
   {
+    "id": "q_LangChain_有哪些文档加载器",
     "question": "LangChain 有哪些文档加载器？",
     "ground_truth_keywords": [
       "TextLoader",
-      "Markdown",
-      "PDF",
-      "Word"
+      "PyPDFLoader",
+      "Docx2txtLoader"
     ],
-    "must_cite": "02-langchain-notes.md"
+    "must_cite": "02-langchain-notes.md",
+    "expect_reject": false,
+    "negative_type": null,
+    "difficulty": "easy"
   },
   {
+    "id": "q_DeepSeek_的_API_怎么调用",
     "question": "DeepSeek 的 API 怎么调用？",
     "ground_truth_keywords": [
       "ChatOpenAI",
-      "OpenAI",
-      "兼容",
-      "API"
+      "deepseek-chat",
+      "api.deepseek.com"
     ],
-    "must_cite": "03-deepseek-api.md"
+    "must_cite": "03-deepseek-api.md",
+    "expect_reject": false,
+    "negative_type": null,
+    "difficulty": "easy"
   },
   {
+    "id": "q_软件开发合同的总金额是多少",
     "question": "软件开发合同的总金额是多少？",
     "ground_truth_keywords": [
-      "480",
-      "000",
-      "金额",
-      "合同"
+      "480,000",
+      "48万",
+      "480000"
     ],
-    "must_cite": "04-contract-2024-0312.md"
+    "must_cite": "04-contract-2024-0312.md",
+    "expect_reject": false,
+    "negative_type": null,
+    "difficulty": "easy"
   },
   {
+    "id": "q_12_月版本什么时候上线",
     "question": "12 月版本什么时候上线？",
     "ground_truth_keywords": [
-      "12",
-      "20",
-      "上线",
+      "12 月 20 日",
       "双十二"
     ],
-    "must_cite": "06-email-client-dec-launch.md"
+    "must_cite": "06-email-client-dec-launch.md",
+    "expect_reject": false,
+    "negative_type": null,
+    "difficulty": "easy"
   },
   {
+    "id": "q_客户希望_12_月版本提前几天",
     "question": "客户希望 12 月版本提前几天？",
     "ground_truth_keywords": [
-      "5",
-      "提前",
-      "12",
-      "20"
+      "提前 5 天"
     ],
-    "must_cite": "06-email-client-dec-launch.md"
+    "must_cite": "06-email-client-dec-launch.md",
+    "expect_reject": false,
+    "negative_type": null,
+    "difficulty": "easy"
   },
   {
+    "id": "q_What_does_the_paper_say_about_",
     "question": "What does the paper say about Hit@1 reaching 1.0?",
     "ground_truth_keywords": [
       "Hit@1",
-      "1.0",
       "op-1"
     ],
-    "must_cite": "papers/test-two-column-paper.pdf"
+    "must_cite": "papers/test-two-column-paper.pdf",
+    "expect_reject": false,
+    "negative_type": null,
+    "difficulty": "hard"
   },
   {
+    "id": "q_论文中关于_BM25_的描述是什么",
     "question": "论文中关于 BM25 的描述是什么？",
     "ground_truth_keywords": [
       "BM25",
       "keyword"
     ],
-    "must_cite": "papers/test-two-column-paper.pdf"
+    "must_cite": "papers/test-two-column-paper.pdf",
+    "expect_reject": false,
+    "negative_type": null,
+    "difficulty": "hard"
   },
   {
+    "id": "q_What_are_the_authors_of_the_sy",
     "question": "What are the authors of the synthetic study paper?",
     "ground_truth_keywords": [
-      "Anonymous",
-      "Authors"
+      "Anonymous"
     ],
-    "must_cite": "papers/test-two-column-paper.pdf"
+    "must_cite": "papers/test-two-column-paper.pdf",
+    "expect_reject": false,
+    "negative_type": null,
+    "difficulty": "hard"
   },
   {
+    "id": "n_公司年假有多少天",
     "question": "公司年假有多少天？",
     "ground_truth_keywords": [],
     "must_cite": "__none__",
-    "expect_reject": true
+    "expect_reject": true,
+    "negative_type": "off_topic",
+    "difficulty": "easy"
   },
   {
+    "id": "n_Python_的_GIL_是什么",
     "question": "Python 的 GIL 是什么？",
     "ground_truth_keywords": [],
     "must_cite": "__none__",
-    "expect_reject": true
+    "expect_reject": true,
+    "negative_type": "off_topic",
+    "difficulty": "easy"
   },
   {
+    "id": "n_How_to_configure_Nginx_reverse",
     "question": "How to configure Nginx reverse proxy?",
     "ground_truth_keywords": [],
     "must_cite": "__none__",
-    "expect_reject": true
+    "expect_reject": true,
+    "negative_type": "off_topic",
+    "difficulty": "easy"
   },
   {
+    "id": "n_团队成员的绩效评分标准是什么",
     "question": "团队成员的绩效评分标准是什么？",
     "ground_truth_keywords": [],
     "must_cite": "__none__",
-    "expect_reject": true
+    "expect_reject": true,
+    "negative_type": "off_topic",
+    "difficulty": "easy"
   },
   {
+    "id": "n_合同的违约金是多少",
     "question": "合同的违约金是多少？",
     "ground_truth_keywords": [],
     "must_cite": "__none__",
-    "expect_reject": true
+    "expect_reject": true,
+    "negative_type": "topic_relevant_no_answer",
+    "difficulty": "hard"
   },
   {
+    "id": "n_DeepSeek_模型有多少参数",
     "question": "DeepSeek 模型有多少参数？",
     "ground_truth_keywords": [],
     "must_cite": "__none__",
-    "expect_reject": true
+    "expect_reject": true,
+    "negative_type": "topic_relevant_no_answer",
+    "difficulty": "hard"
   },
   {
+    "id": "n_合同的签字人是谁",
     "question": "合同的签字人是谁？",
     "ground_truth_keywords": [],
     "must_cite": "__none__",
-    "expect_reject": true
+    "expect_reject": true,
+    "negative_type": "topic_relevant_no_answer",
+    "difficulty": "hard"
   },
   {
+    "id": "n_合同是否允许转包",
     "question": "合同是否允许转包？",
     "ground_truth_keywords": [],
     "must_cite": "__none__",
-    "expect_reject": true
+    "expect_reject": true,
+    "negative_type": "topic_relevant_no_answer",
+    "difficulty": "hard"
   },
   {
+    "id": "n_RAG_有哪些缺点",
     "question": "RAG 有哪些缺点？",
     "ground_truth_keywords": [],
     "must_cite": "__none__",
-    "expect_reject": true
+    "expect_reject": true,
+    "negative_type": "topic_relevant_no_answer",
+    "difficulty": "hard"
   },
   {
+    "id": "n_Qdrant_怎么配置远程_server",
     "question": "Qdrant 怎么配置远程 server？",
     "ground_truth_keywords": [],
     "must_cite": "__none__",
-    "expect_reject": true
+    "expect_reject": true,
+    "negative_type": "topic_relevant_no_answer",
+    "difficulty": "hard"
   },
   {
+    "id": "n_DeepSeek_API_的_QPS_限制是多少",
     "question": "DeepSeek API 的 QPS 限制是多少？",
     "ground_truth_keywords": [],
     "must_cite": "__none__",
-    "expect_reject": true
+    "expect_reject": true,
+    "negative_type": "topic_relevant_no_answer",
+    "difficulty": "hard"
   },
   {
+    "id": "n_莫干山徒步路线全长多少公里",
     "question": "莫干山徒步路线全长多少公里？",
     "ground_truth_keywords": [],
     "must_cite": "__none__",
-    "expect_reject": true
+    "expect_reject": true,
+    "negative_type": "topic_relevant_no_answer",
+    "difficulty": "hard"
   }
 ]

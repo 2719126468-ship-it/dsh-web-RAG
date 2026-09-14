@@ -1,0 +1,10 @@
+{
+  "dev": {
+    "version": "2026-09-14-v4",
+    "notes": "关键词去污染、负样本分层、加 id/difficulty"
+  },
+  "holdout": {
+    "version": "2026-09-14-v1",
+    "notes": "待重建（独立文档集）"
+  }
+}

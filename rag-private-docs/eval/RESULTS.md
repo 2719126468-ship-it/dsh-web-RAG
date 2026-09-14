@@ -346,3 +346,30 @@ dev 集已经被调过多轮。holdout 才是真实泛化信号。但在修完 1
 
 - Qdrant 远程（0.2917）仍是当前最脆弱样本，距阈值仅 0.0083
 - 不急于改动，记录在案
+
+## 2026-09-14 Part A：测试集去污染 + 分层（dev@v4）
+
+### 改动
+- 关键词去污染：移除短数字、单字中文
+- 负样本分层：off_topic / topic_relevant_no_answer
+- 加 id / difficulty 字段
+
+### 结果
+
+| 指标 | 旧 (v3) | 新 (v4) | 变化 |
+|---|---|---|---|
+| context_precision | 0.622 | **0.400** | ↓ 0.222（去污染后暴露真实值） |
+| reject_accuracy | 0.667 | 0.667 | = |
+| hit_at_1 | 1.0 | 1.0 | = |
+| reject_accuracy_off_topic | — | **1.000** | 新增（4 条） |
+| reject_accuracy_topic_relevant_no_answer | — | **0.500** | 新增（8 条） |
+
+### 结论
+
+1. 旧的 context_precision=0.622 被短数字关键词虚高，真实值是 0.4
+2. 分层统计证实：话题相关的负样本拒答率只有 50%，是真实弱点
+3. 混合指标 reject_accuracy=0.667 掩盖了 off_topic(100%) 和 topic_relevant(50%) 的差异
+
+### CI
+- run 34866220381
+- 触发 commit: 733d63c (Part A) + 缩进修复

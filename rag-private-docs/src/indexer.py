@@ -18,13 +18,12 @@ from langchain_qdrant import QdrantVectorStore
 from qdrant_client import QdrantClient
 from qdrant_client.http import models
 
-from qdrant_factory import create_qdrant_client  # Qdrant HTTP models for vector params etc.
+from qdrant_factory import create_qdrant_client, QDRANT_PATH  # Qdrant HTTP models for vector params etc.
 
 from config import config
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 DOCS_DIR = PROJECT_ROOT / "docs"
-QDRANT_PATH = PROJECT_ROOT / config.QDRANT_PATH.lstrip("./")
 MANIFEST_PATH = QDRANT_PATH / "_manifest.json"
 
 

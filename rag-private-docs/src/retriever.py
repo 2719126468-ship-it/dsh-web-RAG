@@ -17,12 +17,11 @@ from langchain_qdrant import QdrantVectorStore
 from qdrant_client import QdrantClient
 from rank_bm25 import BM25Okapi
 
-from qdrant_factory import create_qdrant_client
+from qdrant_factory import create_qdrant_client, QDRANT_PATH
 
 from config import config
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
-QDRANT_PATH = PROJECT_ROOT / config.QDRANT_PATH.lstrip("./")
 
 
 def _tokenize(text: str) -> List[str]:
@@ -126,30 +125,14 @@ class HybridRetriever:
             enumerate(scores), key=lambda x: x[1], reverse=True
         )
 
-        # Normalize BM25 scores per source so no single document dominates.
-        # Problem: a 1500-char RAG intro has more query tokens than a 200-char
-        # PDF chunk → inflated BM25 scores across all its children.
-        # Fix: for each source, divide all scores by that source's max score
-        # so each source contributes at most 1.0 to the RRF fusion.
-        # Compute max per source from top-N to avoid O(n*k) grouping of all docs.
-        source_max: dict[str, float] = {}
-        for idx, score in ranked[:100]:  # sample top 100 for max-per-source
-            doc = self._bm25_corpus[idx]
-            src = doc["metadata"].get("source", "__unknown__")
-            if src not in source_max or score > source_max[src]:
-                source_max[src] = score
-
         results = []
         for idx, score in ranked[:top_n]:
             doc = self._bm25_corpus[idx]
-            src = doc["metadata"].get("source", "__unknown__")
-            max_s = source_max.get(src, 1.0)
-            normalized = float(score) / max_s if max_s > 0 else 0.0
             results.append({
                 "id": doc["id"],
                 "content": doc["content"],
                 "metadata": doc["metadata"],
-                "bm25_score": normalized,
+                "bm25_score": float(score),
             })
         return results
 

@@ -6,7 +6,14 @@ from qdrant_client import QdrantClient
 from config import config
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
-QDRANT_PATH = PROJECT_ROOT / config.QDRANT_PATH.lstrip("./")
+def _resolve_qdrant_path(raw: str) -> Path:
+    p = Path(raw)
+    if p.is_absolute():
+        return p
+    return (PROJECT_ROOT / p).resolve()
+
+
+QDRANT_PATH = _resolve_qdrant_path(config.QDRANT_PATH)
 
 
 def create_qdrant_client() -> QdrantClient:

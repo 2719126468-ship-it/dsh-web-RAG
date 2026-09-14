@@ -88,46 +88,70 @@ def diff_files(
 
 
 def load_file(path: Path) -> List:
-    """Load a single file as a list of Documents.
-
-    All parsers are wrapped in try/except so a single bad file
-    does not crash the whole indexing pass.
-    """
+    """Load a single file. Never raises - returns [] on any failure."""
     try:
-        suf = path.suffix.lower()
-        if suf in (".md", ".txt"):
-            return TextLoader(str(path), encoding="utf-8").load()
-        if suf == ".pdf":
-            if getattr(config, "PDF_PARSER", "default") == "deepdoc":
-                from pdf_parser_deepdoc import parse_pdf_deepdoc
-                result = parse_pdf_deepdoc(path)
-                if result:
-                    return result
-                print(f"[info] DeepDoc 无结果，fallback 到默认: {path.name}")
-            from pdf_parser import parse_pdf
-            docs = parse_pdf(path)
-            if getattr(config, "ENABLE_MULTIMODAL", False):
-                from multimodal_parser import extract_images_with_captions
-                docs = docs + extract_images_with_captions(path)
-            return docs
-        if suf == ".docx":
-            return Docx2txtLoader(str(path)).load()
-        if suf == ".pptx":
-            from pptx_parser import parse_pptx
-            return parse_pptx(path)
-        if suf == ".doc":
-            from doc_parser import parse_doc
-            return parse_doc(path)
-        if suf == ".xlsx":
-            from excel_parser import parse_xlsx
-            return parse_xlsx(path)
-        if suf == ".csv":
-            from excel_parser import parse_csv_file
-            return parse_csv_file(path)
-        return []
+        return _load_file_impl(path)
     except Exception as e:
         print(f"[warn] Failed to load {path}: {e}")
         return []
+
+
+def _load_file_impl(path: Path) -> List:
+    suf = path.suffix.lower()
+    if suf in (".md", ".txt"):
+        return TextLoader(str(path), encoding="utf-8").load()
+    if suf == ".docx":
+        return Docx2txtLoader(str(path)).load()
+    if suf == ".pdf":
+        if getattr(config, "PDF_PARSER", "default") == "deepdoc":
+            from pdf_parser_deepdoc import parse_pdf_deepdoc
+            result = parse_pdf_deepdoc(path)
+            if result:
+                return result
+            print(f"[info] DeepDoc no result, fallback: {path.name}")
+        from pdf_parser import parse_pdf
+        docs = parse_pdf(path)
+        if getattr(config, "ENABLE_MULTIMODAL", False):
+            from multimodal_parser import extract_images_with_captions
+            docs = docs + extract_images_with_captions(path)
+        return docs
+    if suf == ".pptx":
+        from pptx_parser import parse_pptx
+        return parse_pptx(path)
+    if suf == ".doc":
+        from doc_parser import parse_doc
+        return parse_doc(path)
+    if suf == ".xlsx":
+        from excel_parser import parse_xlsx
+        return parse_xlsx(path)
+    if suf == ".csv":
+        from excel_parser import parse_csv_file
+        return parse_csv_file(path)
+    return []
+
+
+def _clear_sources(client, rels: List[str]) -> int:
+    """Delete all points whose source is in rels."""
+    if not rels:
+        return 0
+    try:
+        flt = models.Filter(
+            must=[
+                models.FieldCondition(
+                    key="metadata.source",
+                    match=models.MatchAny(any=rels),
+                )
+            ]
+        )
+        client.delete(
+            collection_name=config.COLLECTION_NAME,
+            points_selector=models.FilterSelector(filter=flt),
+        )
+        return len(rels)
+    except Exception as e:
+        print(f"[warn] Could not clear sources: {e}")
+        return 0
+
 
 
 def split_documents(docs, child_size=None, child_overlap=None):

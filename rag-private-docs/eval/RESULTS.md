@@ -373,3 +373,30 @@ dev 集已经被调过多轮。holdout 才是真实泛化信号。但在修完 1
 ### CI
 - run 34866220381
 - 触发 commit: 733d63c (Part A) + 缩进修复
+
+## 2026-09-15 Part B：代码正确性修复（dev@v4）
+
+### 改动
+- B1: indexer.load_file 全分支 try 包装，坏文件不再穿透
+- B4: QDRANT_PATH 统一到 qdrant_factory，去掉 lstrip 字符集陷阱
+- B5: 删除 retriever 里 BM25 no-op 归一化（RRF 只用 rank，source_max 从未被使用）
+
+### 结果（与 Part A 逐位一致）
+
+| 指标 | Part A | Part B | 结论 |
+|---|---|---|---|
+| context_precision | 0.400 | 0.400 | = |
+| reject_accuracy | 0.667 | 0.667 | = |
+| hit_at_1 | 1.0 | 1.0 | = |
+| reject_accuracy_off_topic | 1.000 | 1.000 | = |
+| reject_accuracy_topic_relevant_no_answer | 0.500 | 0.500 | = |
+
+### 结论
+
+1. B4+B5 是纯清理，不改变检索行为 —— 证实 BM25 归一化确实是 no-op
+2. B1 是真实修复，但不影响检索指标（只在坏文件场景生效）
+3. Part A 的新基线（context_precision=0.4, reject_accuracy=0.667）是可信的
+
+### CI
+- run 34868068522
+- 触发 commit: 17e0a6f (B1) + B4+B5

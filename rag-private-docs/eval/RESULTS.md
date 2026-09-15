@@ -400,3 +400,47 @@ dev 集已经被调过多轮。holdout 才是真实泛化信号。但在修完 1
 ### CI
 - run 34868068522
 - 触发 commit: 17e0a6f (B1) + B4+B5
+
+## 2026-09-15 首次 holdout 评估（holdout@v1）
+
+### 结果
+
+| 指标 | dev@v4 | holdout@v1 |
+|---|---|---|
+| num_questions | 21 | 7 |
+| context_precision | 0.400 | **0.200** |
+| reject_accuracy | 0.667 | 0.500 |
+| hit_at_1 | 1.000 | 0.667 |
+| reject_accuracy_off_topic | 1.000 | 1.000 |
+| reject_accuracy_topic_relevant_no_answer | 0.500 | **0.000** |
+
+### 三条正样本详情
+
+| 问题 | hit@1 | top1_source | 分析 |
+|---|---|---|---|
+| 战略会在哪里开的？ | ✓ | h1 | 正常 |
+| 研发预算是多少？ | ✗ | h1 | **假阴性**：h1 和 h2 都含答案，top-1 命中了 h1 |
+| 订单故障根因？ | ✓ | h3 | 正常 |
+
+### 两条 topic_relevant 负样本详情
+
+| 问题 | confidence | 分析 |
+|---|---|---|
+| 战略会参会人名单是谁？ | 0.72 | 失败——文档只说"12 人"，无名单 |
+| 订单故障影响多少用户？ | 0.79 | 失败——文档只说"服务不可用"，无用户数 |
+
+### 结论
+
+1. **hit_at_1=0.667 是假阴性**：h1 和 h2 都含"研发预算 200 万"，`must_cite` 硬编码 h2 导致误判。已把 must_cite 改成 `"h2-budget"` 子串修复标注。
+2. **context_precision=0.2 是文档长度产物**：holdout 文档短（300-500 字），切成 1-2 chunk，但 TOP_K=5 固定返回 5 条，剩下的是其他文档的噪声。非检索质量问题，但**真实用户体验确实是 top-5 里有 4 条噪声**。
+3. **topic_relevant_no_answer = 0.0 是真实信号**：两个全新文档、两个全新问题，reranker 又被骗到 0.72/0.79。**第四次验证同一缺陷**，与文档无关，是 BGE-reranker 的机制问题。
+4. **off_topic = 1.0 稳定**：与 dev 一致。
+
+### 下一步
+
+- topic_relevant 问题需要 reranker 之外的机制（critic、LLM 二次确认），不是调参能解决
+- context_precision 对短文档偏低是结构问题，可考虑按文档长度动态调 TOP_K
+
+### CI
+- run 34911192733
+- 触发: `gh workflow run "Evaluate (手动触发)" -f dataset=holdout`

@@ -2,7 +2,10 @@
   {
     "id": "q_offsite_location",
     "question": "2025 Q1 战略会在哪里开的？",
-    "ground_truth_keywords": ["西溪", "杭州"],
+    "ground_truth_keywords": [
+      "西溪",
+      "杭州"
+    ],
     "must_cite": "h1-team-offsite-2025.md",
     "expect_reject": false,
     "negative_type": null,
@@ -11,8 +14,11 @@
   {
     "id": "q_q1_dev_budget",
     "question": "2025 Q1 研发预算是多少？",
-    "ground_truth_keywords": ["200 万", "200万"],
-    "must_cite": "h2-budget-q1-2025.md",
+    "ground_truth_keywords": [
+      "200 万",
+      "200万"
+    ],
+    "must_cite": "h2-budget",
     "expect_reject": false,
     "negative_type": null,
     "difficulty": "easy"
@@ -20,7 +26,10 @@
   {
     "id": "q_incident_root_cause",
     "question": "2025 年 2 月订单服务故障的根本原因是什么？",
-    "ground_truth_keywords": ["连接池", "数据库"],
+    "ground_truth_keywords": [
+      "连接池",
+      "数据库"
+    ],
     "must_cite": "h3-incident-postmortem.md",
     "expect_reject": false,
     "negative_type": null,

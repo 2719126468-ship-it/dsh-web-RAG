@@ -20,7 +20,7 @@ PROBES = [
 REFUSE_MARKERS = ["未找到", "没有找到", "资料中未", "无法回答", "not found", "No relevant", "无法从"]
 
 def main():
-    engine = RAGEngine(use_rerank=False)
+    engine = RAGEngine(use_rerank=True)
     print("=" * 72)
     print("Probe: LLM self-refusal when rerank is disabled")
     print("=" * 72)

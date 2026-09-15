@@ -445,7 +445,7 @@ dev 集已经被调过多轮。holdout 才是真实泛化信号。但在修完 1
 - run 34911192733
 - 触发: `gh workflow run "Evaluate (手动触发)" -f dataset=holdout`
 
-## 2026-09-15 holdout v3（must_cite 列表支持）
+## 2026-09-15 holdout@v2（must_cite 列表支持）
 
 ### 改动
 - `evaluator.hit_at_k` 支持 `must_cite` 为字符串或列表

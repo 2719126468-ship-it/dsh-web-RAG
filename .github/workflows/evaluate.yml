@@ -11,6 +11,14 @@ on:
         options:
           - dev
           - holdout
+      use_critic:
+        description: '启用 CRAG critic'
+        required: false
+        default: 'false'
+        type: choice
+        options:
+          - 'false'
+          - 'true'
 
 jobs:
   evaluate:
@@ -40,6 +48,7 @@ jobs:
       - name: Run evaluator (需要 DEEPSEEK_API_KEY)
         env:
           DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+          USE_CRITIC: ${{ inputs.use_critic }}
         run: |
           cd rag-private-docs/src
           if [ "${{ inputs.dataset }}" = "holdout" ]; then
@@ -52,7 +61,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: eval-result-${{ inputs.dataset }}
+          name: eval-${{ inputs.dataset }}-critic-${{ inputs.use_critic }}
           path: rag-private-docs/eval/results/*.json
           if-no-files-found: warn
           retention-days: 30

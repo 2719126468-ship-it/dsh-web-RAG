@@ -114,16 +114,19 @@ class RelevanceCritic:
         return verdicts[: len(hits)]
 
 
-def apply_critic(hits: List[Dict], verdicts: List[str], min_yes: int = 2, maybe_penalty: float = 0.5) -> Tuple[List[Dict], List[Dict]]:
+def apply_critic(hits: List[Dict], verdicts: List[str], min_yes: int = 2, maybe_penalty: float = 1.0) -> Tuple[List[Dict], List[Dict]]:
     """Apply verdicts to hits.
 
     Returns (kept, dropped) where kept is the filtered list and dropped
     is the chunks we removed (kept around for debugging).
 
-    MAYBE chunks are kept (they are topically relevant) but their confidence
-    is multiplied by maybe_penalty to reflect that critic did not see a
-    direct answer. This lets the confidence threshold actually act on
-    "topic related but no answer" cases.
+    MAYBE chunks are kept (they are topically relevant). The maybe_penalty
+    parameter multiplies their confidence.
+
+    2026-09-15: maybe_penalty < 1.0 was found to inflate reject_accuracy
+    without changing critic's judgment (metric hacking). Kept as a parameter
+    for controlled experiments; production and evaluation use 1.0
+    (pure filter: drop NO chunks, keep the rest untouched).
     """
     if len(hits) != len(verdicts):
         return hits, []

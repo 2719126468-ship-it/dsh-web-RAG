@@ -444,3 +444,37 @@ dev 集已经被调过多轮。holdout 才是真实泛化信号。但在修完 1
 ### CI
 - run 34911192733
 - 触发: `gh workflow run "Evaluate (手动触发)" -f dataset=holdout`
+
+## 2026-09-15 holdout v3（must_cite 列表支持）
+
+### 改动
+- `evaluator.hit_at_k` 支持 `must_cite` 为字符串或列表
+- `q_q1_dev_budget` 的 `must_cite` 改成 `[h1, h2]`（答案在两篇文档里都有）
+- `test_eval_set.py` 的 disjoint 检查同步支持列表
+
+### 结果
+
+| 指标 | v1 | v3 |
+|---|---|---|
+| hit_at_1 | 0.667 | **1.000** |
+| hit_at_3 | 1.000 | 1.000 |
+| context_precision | 0.200 | 0.200 |
+| reject_accuracy | 0.500 | 0.500 |
+| reject_accuracy_off_topic | 1.000 | 1.000 |
+| reject_accuracy_topic_relevant_no_answer | 0.000 | 0.000 |
+
+### 结论
+
+1. **hit_at_1 修复**：v1 的 0.667 是标注问题（答案在两篇文档），非检索缺陷。v3 是真实值。
+2. **context_precision = 0.2 未变**：短文档 + 固定 TOP_K=5 的结构问题，与检索质量无关。
+3. **topic_relevant_no_answer = 0.0 稳定**：第五次验证。与文档无关，是 BGE-reranker 的机制缺陷。
+
+### holdout 基线的真实含义
+
+- 3 条正样本：检索 100% 命中，reranker 判定 0.99+
+- 4 条负样本：
+  - off_topic（2 条）：100% 拒答 ✓
+  - topic_relevant（2 条）：0% 拒答 ✗ —— **当前系统的真实弱点**
+
+### CI
+- run 34919424143

@@ -11,6 +11,14 @@ on:
         options:
           - dev
           - holdout
+      use_rerank:
+        description: '启用 reranker（false 用于测试 fallback）'
+        required: false
+        default: 'true'
+        type: choice
+        options:
+          - 'true'
+          - 'false'
       use_critic:
         description: '启用 CRAG critic'
         required: false
@@ -49,6 +57,7 @@ jobs:
         env:
           DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
           USE_CRITIC: ${{ inputs.use_critic }}
+          USE_RERANK: ${{ inputs.use_rerank }}
         run: |
           cd rag-private-docs/src
           if [ "${{ inputs.dataset }}" = "holdout" ]; then

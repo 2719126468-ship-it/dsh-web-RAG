@@ -213,7 +213,9 @@ def evaluate(retriever: HybridRetriever, test_set: List[Dict] = None) -> Dict[st
             hits = retriever.retrieve(q, top_k=5)
         if critic and hits:
             verdicts = critic.evaluate(q, hits)
-            filtered, dropped = apply_critic(hits, verdicts, min_yes=2, maybe_penalty=1.0)
+            # maybe_penalty 用 critic.py 默认值 1.0（纯过滤）。
+            # 0.5 会让负样本 confidence 虚降、虚增 reject_accuracy，是 metric hacking。
+            filtered, dropped = apply_critic(hits, verdicts, min_yes=2)
             if not filtered:
                 # critic 全判 NO：保留 rerank top-1，但 confidence × 0.3
                 top = max(hits, key=lambda x: x.get("confidence", 0))
@@ -320,7 +322,9 @@ def main():
         test_set = json.loads(path.read_text(encoding="utf-8"))
     else:
         print(f"[warn] {path} 不存在，回退到硬编码 DEFAULT_TEST_SET")
-    retriever = HybridRetriever(use_rerank=True)
+    import os as _os_rerank
+    _use_rerank = _os_rerank.getenv("USE_RERANK", "true").lower() == "true"
+    retriever = HybridRetriever(use_rerank=_use_rerank)
     result = evaluate(retriever, test_set)
     print("\n" + "=" * 70)
     print("RAG 评估报告")

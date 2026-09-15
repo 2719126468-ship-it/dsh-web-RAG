@@ -478,3 +478,63 @@ dev 集已经被调过多轮。holdout 才是真实泛化信号。但在修完 1
 
 ### CI
 - run 34919424143
+
+## 2026-09-15 critic 纯过滤契约确认
+
+### 背景
+
+`apply_critic` 的 `maybe_penalty` 从 0.5 改为默认 1.0，废弃 MAYBE 折扣。
+
+之前"critic 有效"的数字（dev topic_relevant 0.625 / holdout 0.5）全部来自折扣本身，
+是 metric hacking：只降负样本 confidence 不改判定，虚增 reject_accuracy 而不提升能力。
+
+### 验证
+
+对比"显式传 `maybe_penalty=1.0`"与"默认 1.0"两种调用，dev 集：
+
+| 指标 | 显式 1.0 | 默认 1.0 |
+|---|---|---|
+| reject_accuracy | 0.667 | 0.667 |
+| reject_accuracy_topic_relevant_no_answer | 0.500 | 0.500 |
+| answer_hit_at_1 | 1.000 | 1.000 |
+| hit_at_1 | 1.000 | 1.000 |
+| context_precision | 0.589 | 0.580 |
+
+### 结论
+
+1. 关键指标逐位一致 → 默认值改动是纯契约变化，无行为差异
+2. context_precision 有 0.009 微差 → 机制未确认（可能是 indexer 产出的 parent_text 边界差异，也可能是 critic LLM 判定抖动）
+3. critic 的真实价值只有 context_precision 提升（dev +0.189 / holdout +0.467）
+4. **对拒答贡献为 0**——topic_relevant 回到无 critic 的值（dev 0.5 / holdout 0.0）
+
+### critic 定位
+
+保留 critic.py 作为**评估可观测工具**，qa.py 不接入。
+
+理由：
+- 对拒答零贡献（唯一的拒答机制是 MAYBE 折扣，已废弃）
+- context_precision 是代理指标，不代表 LLM 回答质量
+- 每次问答多一次 critic LLM 调用，成本翻倍
+
+若未来做"丢 NO chunk 是否让 LLM 回答更好"的实验，再决定是否进生产。
+
+### CI（按 commit 区分）
+
+**f182a1e（critic 默认 0.5，metric hacking 阶段）**
+- 34921754578
+- 34922419905
+- 34922949117
+
+这三个 run 的 topic_relevant 数字（0.625 / 0.5）来自 MAYBE 折扣虚降，**不可作为 critic 能力依据**。
+
+**398c61c（显式传 maybe_penalty=1.0）**
+- 34923928476  dev     → topic_rel=0.5, ans_hit_1=1.0
+- 34924019457  holdout → topic_rel=0.0, ans_hit_1=1.0
+
+**7b89eb0（默认值 1.0，契约固化）**
+- 34966141623  dev     → 与 398c61c 关键指标一致
+
+### 附带发现
+
+CI 结果**不是逐位确定的**。`context_precision` 在相同 commit、相同输入下两次运行可出现 0.009 级差异。
+做精细对比（<0.05 变化）时需警惕这类噪声。

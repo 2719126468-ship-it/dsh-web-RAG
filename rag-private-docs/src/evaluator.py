@@ -231,6 +231,10 @@ def evaluate(retriever: HybridRetriever, test_set: List[Dict] = None) -> Dict[st
         row_confidence = max_confidence(hits)
         expect_reject = item.get("expect_reject", False)
         reject_correct = None
+        # 注意：reject_correct 只测 confidence 闸（qa.py 的 max_conf < 0.30），
+        # 且只测闸本身，不测 LLM 层——topic_rel 中 conf >= 0.30 的题会通过此闸
+        # 进入 LLM，由 LLM 在 prompt 约束下自行判断拒答（probe run 34987266954 实测）。
+        # 因此 reject_accuracy 是"confidence 闸拒答率"，不是"用户看到的拒答率"。
         if expect_reject:
             reject_correct = row_confidence < CONFIDENCE_THRESHOLD_FOR_EVAL
         rows.append({

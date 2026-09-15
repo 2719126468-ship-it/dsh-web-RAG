@@ -513,6 +513,9 @@ dev 集已经被调过多轮。holdout 才是真实泛化信号。但在修完 1
 
 理由：
 - 对拒答零贡献（唯一的拒答机制是 MAYBE 折扣，已废弃）
+  > 注（2026-09-15）：上句"唯一的拒答机制"部分被 probe 修正——LLM 自拒是第二条机制。
+  > "对拒答零贡献"部分仍成立：critic 不参与 qa.py 生产链路。
+  > 详见本节末"reject_accuracy 语义边界"。
 - context_precision 是代理指标，不代表 LLM 回答质量
 - 每次问答多一次 critic LLM 调用，成本翻倍
 
@@ -538,3 +541,42 @@ dev 集已经被调过多轮。holdout 才是真实泛化信号。但在修完 1
 
 CI 结果**不是逐位确定的**。`context_precision` 在相同 commit、相同输入下两次运行可出现 0.009 级差异。
 做精细对比（<0.05 变化）时需警惕这类噪声。
+
+## 2026-09-15 reject_accuracy 语义边界
+
+### 背景
+
+probe run 34987266954（正常模式 use_rerank=True）显示：正常拒答分两层。
+
+正常模式下 dev 负样本的分布（数据来自 dev+critic run 34921754578）：
+
+| 类别 | conf | 拒答位置 | 条数 |
+|---|---|---|---|
+| off_topic | < 0.30 | confidence 闸（qa.py 的 max_conf < 0.30）| 4/4 |
+| topic_rel | < 0.30 | confidence 闸（同上）| 5/8 |
+| topic_rel | >= 0.30 | LLM 自拒（进 LLM）| 3/8 |
+
+注意：上表条数是 critic 开启时的分布。无 critic 时 topic_rel 的 5/3 分裂可能变化。
+
+对照组：probe run 34984139269（fallback 模式 use_rerank=False）：
+全部负样本 conf ≈ 0.33 > 0.30 → 全部进 LLM → 全部由 LLM 自拒。
+
+### 结论
+
+- `evaluator.py` 的 `reject_correct = row_confidence < THRESHOLD` 只测 confidence 闸
+- 不测 LLM 自拒（evaluator 不调 LLM）
+- 因此 `reject_accuracy` = "confidence 闸拒答率"，不是"用户看到的拒答率"
+- dev 的 0.667 只反映子系统 A
+
+### 影响
+
+- 基于 `reject_accuracy` 的历史解读需加此边界
+- critic 在 qa.py 外——与 LLM 自拒无交互
+- confidence 闸在正常模式下拦截了 off_topic 类 query，它们不进 LLM。
+  （若移除闸，LLM 会如何处理，未验证。）
+
+### 稳定性未验证
+
+- `qa.py` 的 temperature=0.1 → 同一输入多次调用可能不同输出
+- probe 单次 run，不能外推"LLM 必自拒"
+- 待扩 probe：按类型分配 + 每条跑 2~3 次

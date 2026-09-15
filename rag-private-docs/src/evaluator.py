@@ -213,7 +213,7 @@ def evaluate(retriever: HybridRetriever, test_set: List[Dict] = None) -> Dict[st
             hits = retriever.retrieve(q, top_k=5)
         if critic and hits:
             verdicts = critic.evaluate(q, hits)
-            filtered, dropped = apply_critic(hits, verdicts, min_yes=2)
+            filtered, dropped = apply_critic(hits, verdicts, min_yes=2, maybe_penalty=1.0)
             if not filtered:
                 # critic 全判 NO：保留 rerank top-1，但 confidence × 0.3
                 top = max(hits, key=lambda x: x.get("confidence", 0))

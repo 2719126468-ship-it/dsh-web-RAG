@@ -47,8 +47,20 @@ def test_expect_reject_has_empty_keywords(test_set):
 def test_holdout_docs_disjoint_from_dev():
     dev = json.loads((EVAL / "test_set.json").read_text(encoding="utf-8"))
     hold = json.loads((EVAL / "test_set_holdout.json").read_text(encoding="utf-8"))
-    dev_docs = {q["must_cite"] for q in dev if not q.get("expect_reject")}
-    hold_docs = {q["must_cite"] for q in hold if not q.get("expect_reject")}
+
+    def normalize(x):
+        if isinstance(x, list):
+            return set(x)
+        return {x}
+
+    dev_docs = set()
+    for q in dev:
+        if not q.get("expect_reject"):
+            dev_docs |= normalize(q["must_cite"])
+    hold_docs = set()
+    for q in hold:
+        if not q.get("expect_reject"):
+            hold_docs |= normalize(q["must_cite"])
     overlap = dev_docs & hold_docs
     assert not overlap, f"holdout 和 dev 共享文档: {overlap}"
 

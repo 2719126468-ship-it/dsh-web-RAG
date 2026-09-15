@@ -18,7 +18,10 @@
       "200 万",
       "200万"
     ],
-    "must_cite": "h2-budget",
+    "must_cite": [
+      "h1-team-offsite-2025.md",
+      "h2-budget-q1-2025.md"
+    ],
     "expect_reject": false,
     "negative_type": null,
     "difficulty": "easy"

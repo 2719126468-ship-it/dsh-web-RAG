@@ -142,13 +142,21 @@ def context_recall(hits: List[Dict], keywords: List[str]) -> float:
     return _hits_keywords(combined, keywords) / len(keywords)
 
 
-def hit_at_k(hits: List[Dict], must_cite: str, k: int = 5) -> bool:
-    """Was the required source among the top-k retrieved?"""
+def hit_at_k(hits: List[Dict], must_cite, k: int = 5) -> bool:
+    """Was at least one of the required sources among the top-k retrieved?
+
+    must_cite can be a string (single source) or a list of strings
+    (any match counts). This handles cases where the same fact appears
+    in multiple documents (e.g. meeting notes + budget table).
+    """
+    if isinstance(must_cite, str):
+        must_cite = [must_cite]
     top_k = hits[:k]
     for h in top_k:
         src = h.get("metadata", {}).get("source", "")
-        if must_cite in src:
-            return True
+        for pat in must_cite:
+            if pat in src:
+                return True
     return False
 
 

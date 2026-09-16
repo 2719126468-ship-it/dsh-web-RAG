@@ -143,10 +143,24 @@ class RAGEngine:
         }
 
     def _enrich_sources(self, hits: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-        """Add file path, line context, and outline heading to each source."""
+        """Add file path, line context, and outline heading to each source.
+
+        Deduplication mirrors format_for_llm: when hits carry parent_text +
+        parent_id, only the first occurrence of each parent_id is kept, so
+        the "index" field matches the [N] tags the LLM saw in the prompt.
+        """
         enriched = []
-        for i, h in enumerate(hits, 1):
+        seen_parents = set()
+        i = 0
+        for h in hits:
             meta = h.get("metadata", {})
+            parent_text = meta.get("parent_text")
+            parent_id = meta.get("parent_id")
+            if parent_text and parent_id:
+                if parent_id in seen_parents:
+                    continue
+                seen_parents.add(parent_id)
+            i += 1
             src = meta.get("source", "unknown")
             file_path = PROJECT_ROOT / src
             line_ctx = meta.get("start_line", 0)

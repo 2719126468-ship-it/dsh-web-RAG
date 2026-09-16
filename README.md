@@ -738,6 +738,23 @@ reranker 给 0.91——比 10 条正样本里的 7 条都高。
 离拒答阈值（0.30）只差 0.07。换 reranker 或改 PDF 解析方式
 时可能被误拒。
 
+### reranker 加载失败的行为
+
+`retriever.py` 的 `_load_reranker` 失败时（网络 / 内存 / 版本不兼容），当前行为是：
+
+- 每次调用重试（`self._reranker = None` 与初始值相同，`if self._reranker is not None` 不成立）
+- 每次都打一行 `[warn] Reranker unavailable...`
+- 系统继续运行，但走 fallback 路径（confidence 全在 0.30 附近，confidence 闸基本失效）
+
+**这意味着**：rerank 虽标为"必需"，但加载失败时**不会报错**——用户可能不知情地使用一个失效系统。
+
+**两种可选修法**（未做）：
+
+- **A. 失败缓存**：加 `_reranker_failed` 状态，首次 warn 时明确告知"后续不再提示"
+- **D. 失败 raise**：与"必需"语义一致——要么修好，要么显式 `use_rerank=False`
+
+选 A 还是 D 取决于产品语义：A 假设"用户已知降级风险"，D 假设"系统必须可靠"。
+
 ## 常见问题
 
 **Q：装依赖时报网络超时**

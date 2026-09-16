@@ -104,7 +104,7 @@ class RAGEngine:
             }
 
         context = self.retriever.format_for_llm(hits)
-        history_text = format_history(history)
+        history_text = format_history(history[:-1])
 
         # 注入用户记忆（可选，config.ENABLE_MEMORY=True 时启用）
         memory_text = ""

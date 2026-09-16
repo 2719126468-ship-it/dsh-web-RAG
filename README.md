@@ -24,7 +24,7 @@
 | 提交钩子 | .githooks/pre-commit 自动跑测试 |
 | 文档格式 | .md / .txt / .pdf / .docx / .doc / .pptx / .xlsx / .csv（8 种） |
 | 评估体系 | evaluator.py（检索）+ eval_faithfulness.py（断言级）+ eval_ragas.py（RAGAS 三指标） |
-| 检索 | BM25 + 向量 + RRF 融合 + 可选 rerank |
+| 检索 | BM25 + 向量 + RRF 融合 + rerank |
 | 引用溯源 | 回答标注来源文件 + 行号 + 章节 |
 | 增量索引 | 只重索引变化文件 |
 | 可视化 | pipeline_app.py（Streamlit 五 Tab） |
@@ -33,6 +33,8 @@
 | HTTP 接口 | api.py（FastAPI）+ webhook.py |
 | Qdrant 模式 | 本地嵌入式 / 远程 server 双模式 |
 | 依赖更新 | Dependabot 每周自动提 PR |
+
+> **注**：rerank 是必需组件——关闭后 confidence 公式走 fallback 分支，所有 query 的 confidence 落在 0.30 附近，confidence 闸失效（详见下文"已知局限"）。
 
 ## 什么是 RAG？为什么要用它？
 

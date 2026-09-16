@@ -548,15 +548,17 @@ CI 结果**不是逐位确定的**。`context_precision` 在相同 commit、相�
 
 probe run 34987266954（正常模式 use_rerank=True）显示：正常拒答分两层。
 
-正常模式下 dev 负样本的分布（数据来自 dev+critic run 34921754578）：
+正常模式下 dev 负样本的分布（数据来自 dev+critic run 34966141623，maybe_penalty=1.0（当前默认））：
 
 | 类别 | conf | 拒答位置 | 条数 |
 |---|---|---|---|
 | off_topic | < 0.30 | confidence 闸（qa.py 的 max_conf < 0.30）| 4/4 |
-| topic_rel | < 0.30 | confidence 闸（同上）| 5/8 |
-| topic_rel | >= 0.30 | LLM 自拒（进 LLM）| 3/8 |
+| topic_rel | < 0.30 | confidence 闸（同上）| 4/8 |
+| topic_rel | >= 0.30 | LLM 自拒（进 LLM）| 4/8 |
 
-注意：上表条数是 critic 开启时的分布。无 critic 时 topic_rel 的 5/3 分裂可能变化。
+注意：上表为 critic 开启 + maybe_penalty=1.0（当前默认）时的分布。
+历史对照：早期 run 34921754578（maybe_penalty=0.5）为 topic_rel 5/3。
+折扣把 4 条 topic_rel 的 confidence 压低了（数值减半）；其中 1 条（DeepSeek 参数量）因此跨过 0.30 阈值，分裂从 4/4 变为 5/3。
 
 对照组：probe run 34984139269（fallback 模式 use_rerank=False）：
 全部负样本 conf ≈ 0.33 > 0.30 → 全部进 LLM → 全部由 LLM 自拒。

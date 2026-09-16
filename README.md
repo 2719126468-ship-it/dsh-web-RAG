@@ -740,20 +740,15 @@ reranker 给 0.91——比 10 条正样本里的 7 条都高。
 
 ### reranker 加载失败的行为
 
-`retriever.py` 的 `_load_reranker` 失败时（网络 / 内存 / 版本不兼容），当前行为是：
+rerank 是必需组件——`retriever.py` 的 `_load_reranker` 失败时（网络 / 内存 / 版本不兼容），会 **raise RuntimeError**，不静默降级。
 
-- 每次调用重试（`self._reranker = None` 与初始值相同，`if self._reranker is not None` 不成立）
-- 每次都打一行 `[warn] Reranker unavailable...`
-- 系统继续运行，但走 fallback 路径（confidence 全在 0.30 附近，confidence 闸基本失效）
+错误信息包含三条排查路径：
 
-**这意味着**：rerank 虽标为"必需"，但加载失败时**不会报错**——用户可能不知情地使用一个失效系统。
+1. 确认依赖安装（`sentence-transformers`）
+2. 确认网络可达 huggingface.co（或设 `HF_ENDPOINT=https://hf-mirror.com`）
+3. 如果确实想无 rerank 运行，显式传 `use_rerank=False`——但要注意这会大幅降低拒答准确度（confidence 全在 0.30 附近，confidence 闸基本失效）
 
-**两种可选修法**（未做）：
-
-- **A. 失败缓存**：加 `_reranker_failed` 状态，首次 warn 时明确告知"后续不再提示"
-- **D. 失败 raise**：与"必需"语义一致——要么修好，要么显式 `use_rerank=False`
-
-选 A 还是 D 取决于产品语义：A 假设"用户已知降级风险"，D 假设"系统必须可靠"。
+**为什么是 raise 而不是降级**：静默降级会让用户在不知情下使用一个失效系统——用户看到"能跑"，但拒答行为已不可靠。raise 强制用户要么修好，要么显式选择降级。
 
 ## 常见问题
 

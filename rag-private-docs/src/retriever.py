@@ -77,8 +77,16 @@ class HybridRetriever:
             print("[info] Loading reranker (BGE-reranker-base)...")
             self._reranker = CrossEncoder("BAAI/bge-reranker-base")
         except Exception as e:
-            print(f"[warn] Reranker unavailable, skipping: {e}")
-            self._reranker = None
+            raise RuntimeError(
+                f"Reranker is REQUIRED but failed to load: {e}\n"
+                f"Fix one of:\n"
+                f"  1. pip install -r rag-private-docs/requirements.txt "
+                f"(ensure sentence-transformers installed)\n"
+                f"  2. Check network access to huggingface.co "
+                f"(or set HF_ENDPOINT=https://hf-mirror.com)\n"
+                f"  3. If you intentionally want to run without reranker, "
+                f"pass use_rerank=False (this degrades rejection accuracy significantly)"
+            ) from e
         return self._reranker
 
     def _load_bm25(self):

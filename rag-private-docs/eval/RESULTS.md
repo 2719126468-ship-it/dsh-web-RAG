@@ -99,6 +99,13 @@ reranker 测的是「问题与文本的**话题相关性**」，不是「文本�
 
 ### 下一步方向
 
+> **注（2026-09-16 补）**：本节写于 2026-09-13，三个方向后续状态如下——
+> - 方向 1（集成 critic）**已归档**：commit `e900df7` "critic 纯过滤契约确认 + 定位（不进 qa.py）"。
+>   后续实验证明 MAYBE 折扣是 metric hacking，纯过滤后 critic 对 reject_accuracy 零贡献。
+> - 方向 2（低分正样本）：论文作者这条经 probe（`ad87f16`）查明——LLM 实际给出了
+>   "Anonymous Authors"，措辞保守但非拒答。
+> - 方向 3（加负样本）**已完成**：test_set 从 10 条扩到 12 条。
+
 1. **集成 critic 到拒答链路**（关键）
    - `critic.py` 是 CRAG 实现：让 LLM 判断"这段 chunk 是否真的包含答案"
    - 目前只在 `evaluator.py` 里可选开启，`qa.py` 没强制用

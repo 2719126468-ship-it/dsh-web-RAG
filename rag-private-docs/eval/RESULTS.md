@@ -790,3 +790,117 @@ summary / aggregate），共 26 项断言全通过，含：legacy `refused` 与 
 
 - 探针：`rag-private-docs/src/probe_stability.py`（唯一功能改动；qa.py / evaluator.py / retriever.py / probe.yml 均未改）
 - 判定输入：`rag-private-docs/eval/test_set.json`（`expect_reject` + `ground_truth_keywords`）
+
+## 2026-09-19 四态轴在新数据上复现（真实 CI run）
+
+### 这一节与上一节的区别
+
+上一节（`### 本次重判结果（本地 artifact，非新 run）`）用的是 **09-16 artifact 的旧回答 + 本地回放**，
+数字来自手算/回放，其 15/15 是"在同一批回答文本上拟合出的自洽性"，
+正因如此那次明确标注为"不是系统能力的证明"，并把"下一次真实 CI run 重跑混淆表"列为唯一诚实的检验。
+
+本节是那项检验的结果：**commit `c6f5f47b` 触发的新 run，用 LLM 重新生成的回答**，
+不是回放、不是手算。
+
+    run 35388126182（run_number 4，workflow_dispatch，conclusion: success）
+    head_sha c6f5f47b89fdbc7f7c2b1a5b5dcf51c5e137b7e3  ← 四态改造 commit
+    2026-09-18T19:50:01Z → 20:00:16Z（≈10m15s）= CST 2026-09-19 03:50 → 04:00
+
+### 结果：聚合量与新口径预期逐项一致
+
+| 指标 | 期望 | 实测（新数据） |
+|---|---|---|
+| state_counts | 40 / 20 / 0 / 15 | **SYSTEM_REFUSE 40 · REDIRECTED 20 · REFUSED 0 · DELIVERED 15** |
+| legacy_refused_count | 65 | **65** |
+| system_refuse_by | confidence 主导 | **{confidence: 40, template: 0}** |
+| positive delivery_rate | 1.0 | **15/15 = 1.0** |
+| negative false_delivered | 0 | **0** |
+| negative non_delivery_rate | 1.0 | **1.0** |
+
+注意 `template: 0` 在真实 run 上**依旧一次都没触发** —— 闸 0（confidence）单独完成了全部 40 条
+SYSTEM_REFUSE 的归因。模板正则仍是"未被执行的保险"，其触发条件（conf ≥ 阈值却命中模板句）
+在本批数据上尚未出现。
+
+### 设计目标达成的证据：论文作者那条
+
+    What are the authors of the synthetic study paper?
+    refused = 5/5  (legacy，子串匹配判定为"拒答")
+    state   = DELIVERED  (四态，判定为"已交付")
+
+同一批回答上，legacy 布尔与四态**给出相反结论**，而这正是本次改造的全部理由：
+这条回答的首句写"资料中未找到相关内容"，但残句交付了槽位值 `Anonymous Authors`，
+且该值就是 `test_set` 为它定义的金标（`ground_truth_keywords = ["Anonymous"]`）。
+
+legacy 口径只有"是/否"一个自由度，无法表达"首句在拒、残句在交付"，
+所以它把这条**正样本误记为拒答**，成为 14/15 里唯一的那 1 条错误。
+四态轴用极性分流把判定权交还给金标关键词，因此这条从 `refused=True` 翻为 `DELIVERED` ——
+**这不是放宽阈值，是换了正确的轴。**
+
+### 首次实证分解：reject_accuracy 到底测的是什么
+
+09-15「reject_accuracy 语义边界」一节曾写过：`evaluator.py` 的 `reject_correct` 只比
+`confidence < THRESHOLD`，不调用 LLM，因此 `reject_accuracy` = "confidence 闸拒答率"，
+**不是用户看到的拒答率**，但当时只是定性判断，没有量化。
+
+新轴按极性聚合后给出了分解，且这次是真实 run 的数据（12 条负样本）：
+
+| 阶段 | 拦下 | 占负样本 |
+|---|---|---|
+| confidence 闸（qa.py，用户看不到 LLM） | 8 条 | **0.667** |
+| LLM 自拒（进了 LLM 仍未交付） | 4 条 | **0.333** |
+| **端到端 non_delivery**（用户实际感知） | **12 条** | **1.000** |
+
+`confidence_gate = 0.667` 与 RESULTS.md 长期引用的 `reject_accuracy = 0.667` **逐位相同** ——
+即该指标确定性地只覆盖子系统 A，缺口恰是 LLM 自拒那 0.333。
+**用户实际经历的拒答率是 1.000（12/12），比 0.667 高出的部分全部来自 LLM 自拒。**
+
+### REFUSED 在新数据上仍为空类（第二次观察）
+
+09-16 与 09-19 两次独立 run（不同日期、重新生成的回答）中，`REFUSED` 计数**都是 0**：
+LLM 分支的 4 条 topic_relevant 负样本全部落在 REDIRECTED，本批数据里**没有裸拒答**。
+
+按**第二次观察**的定义，可以认为该类别在本 test_set 上稳定为空，
+但这不构成删除依据，理由：其判定成本接近零（闸 2 的一个分支），
+且它是"未来出现硬拒答"的安全网 —— 若某次 run 出现 REFUSED > 0，
+那本身就是"LLM 拒答行为发生变化"的信号，删掉它就丢失了这个观测点。
+结论：保留。若第三次观察仍为空，再考虑是否降级为"仅记录不分支"。
+
+### 修正上文「验证方式与残留风险」的结论
+
+**以下这段修正 `### 验证方式与残留风险` 一节末尾的「残留风险（重要）」判断，不删除原行。**
+
+原文（写于 09-18）称：15/15 是在同一批 15 条上拟合出的自洽性，唯一诚实的检验是下一次真实 CI run。
+
+现在该检验**已完成并通过**（run 35388126182）。因此：
+
+- 原文"在此之前不要把 15/15 当作结论引用"这一限制**已解除** ——
+  分类器并非拟合到 09-16 那批回答的具体措辞：换成 09-19 新生成的回答，15/15 仍然成立。
+- 但需保留一条更窄的限制，避免过度外推：
+  **test_set 的 15 个问题本身没有变。** 本次消除的是"对回答措辞过拟合"的风险，
+  **没有**消除"口径与这批 test_set 的构造相适配"的风险（例如金标关键词恰好又是判据）。
+  真正的外推检验需要**新问题**（holdout 扩样），不是新回答。
+
+### 附带观察：本地回放方法被真实 run 验证
+
+09-18 的验证是在无法 live 跑（本机缺 `langchain_openai`）的前提下，
+用 fake `qa` 注入 + 回放 artifact 驱动 `probe_stability.main()` 真实代码路径完成的。
+本次真实 run 的聚合量与那次回放**逐项相同** ——
+说明"回放驱动真实代码路径"这套离线验证方法本身可信，可作为后续无 live 环境时的标准手段。
+
+需说明同一性的边界：一致的是**聚合分布**，不是逐条回答文本。
+不同 run 的回答措辞会有差异（09-16 已观察到违约金的 5 次措辞各不相同），
+因此聚合相同不等于答案逐字相同。
+
+### 正样本 delivery 的分母限制
+
+`positive.delivery_rate = 1.0` 的分母是 3，不是 9 ——
+probe_stability.py 的 POSITIVE_SAMPLES 硬编码三条
+（什么是 RAG / 软件开发合同总金额 / 论文作者），其余 6 条正样本
+未被探针覆盖。因此 1.0 只说明"被测的 3 条全部交付"，
+不能推广到 test_set 的全部 9 条正样本。扩样是独立的外推检验。
+
+### 数据来源声明
+
+run 元数据（run id / run_number / head_sha / conclusion / 时间戳）由 GitHub API 核对确认。
+上述聚合数字来自该 run 的 CI 输出（artifact `probe-stability-result` 需 token 才能下载，
+无 token 时 zip 端点返回 401），**未做二次独立解析**。

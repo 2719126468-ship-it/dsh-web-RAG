@@ -654,3 +654,139 @@ CI run: 35104159356。
 
 ### CI
 - run 35104159356
+
+## 2026-09-18 probe 判定口径：被证否的三态 + 落地四态轴
+
+### 数据来源
+
+本地 `probe_stability_results.json`（仓库根，已被 .gitignore 忽略）来自 CI artifact：
+
+    gh run download 35104159356 -n probe-stability-result   # artifact id 10450590236, 3651 bytes
+    # run 35104159356 · head_sha c5c1f268 · 2026-09-16 · 30 天保留（2026-10-16 过期）
+
+75 条记录 = 15 问 × 5 次。三条被质疑的 answer 完整存世，**均未被 300 字截断**（len 68 / 177 / 82）。
+
+### 第一版方案被真实数据证否
+
+原计划把 `refused` 布尔升级为三态（SYSTEM_REFUSE / LLM_REFUSE / LLM_ANSWERED），
+LLM 分支用「位置闸 + 残留闸」区分，规则为 **残句 ≥ 20 字 且（含 [n] 或命名实体/数字）→ LLM_ANSWERED**。
+
+**实测结果：失败，且比现状更差。**
+
+| 口径 | 问题级正确率 | 错在哪 |
+|---|---|---|
+| legacy `refused`（子串匹配，现状） | **14/15** | 只错"论文作者"1 条 |
+| 三态 + 残留闸（原方案） | **11/15** | 4 条 topic_rel 负样本被误判为已答 |
+
+被误判的 4 条：违约金 / 莫干山全长 / DeepSeek 参数量 / RAG 缺点。
+它们全都满足"长度 ≥ 20 且含 [n]"，但**实际没有回答问题**——
+违约金那条明说"资料中未找到违约金的相关约定"，莫干山那条明说"没有提及路线全长多少公里"。
+
+**根因不是阈值，是信号饱和**（实测数字）：
+
+| 信号 | 实测 | 判别力 |
+|---|---|---|
+| 引用角标 `[n]` | LLM 分支 **35/35 条**全部含 `[n]` | **0** —— qa.py 的 prompt 要求引用，LLM 一开口就带，无论答还是拒 |
+| 数字 | "论文作者"（真交付）残句含数字 **0/5**；违约金（真拒答）残句塞满 0.5%/10% | **反相关** —— 那些数字属于"延期罚则"，被 LLM 自己明说"并非违约金条款" |
+| 命名实体 | 能捞到 `Anonymous`，也能在 DeepSeek 参数量上命中 `deepseek-chat` | 噪声 |
+
+结论：**任何表面形态正则都无法区分"首句同样写未找到、但残句交付了槽位值"与"残句否定槽位"**，
+这需要语义判断。此外违约金 5 次回答措辞全不同（「并非…条款」/「均未出现…表述」/「但这属于…」）
+却判定稳定 —— 说明靠正则枚举否定措辞也不可行。
+
+**另一个被本次证实的旧问题**：300 字截断确实在发生，而且砍到的是**正样本** ——
+`什么是 RAG？` 的回答断在 `与传`。截断偏差方向是"低估正样本"。故本次改为存全文 answer。
+
+### 落地的口径：slot 交付四态轴（极性感知）
+
+放弃"拒答/已答"二分（实测该轴不成立），改为：
+
+    SYSTEM_REFUSE  qa.py confidence 闸输出（固定模板）
+    REDIRECTED     未找到 X + 给出相关上下文/引用（"软拒"）
+    REFUSED        裸拒答，无实质内容（"硬拒"）
+    DELIVERED      真的交付了答案
+
+注意 REDIRECTED / REFUSED **都是"未交付"**，区别只在是否给了相关上下文。
+
+判定顺序：
+
+    闸 0   conf < CONFIDENCE_THRESHOLD      -> SYSTEM_REFUSE（结构信号，最可靠）
+    闸 0'  命中 qa.py 模板正则               -> SYSTEM_REFUSE（防阈值漂移的第二道保险）
+    闸 0'' 空回答（含 None）                 -> REFUSED（空串不含拒答标记，若不加此闸，
+                                              负样本分支会把它误判成 DELIVERED）
+    闸 1   按 test_set 的 expect_reject 分流：
+             正样本 -> ground_truth_keywords 命中即 DELIVERED
+             负样本 -> legacy refused 为假即 DELIVERED（= 幻觉交付）
+    闸 2   形态细分：剥首句后残句非空白字符 >= MIN_REDIRECT_CHARS ? REDIRECTED : REFUSED
+
+**关键设计保证：DELIVERED 只能由 test_set 的金标关键词产出，形态正则无权翻转负样本。**
+这是对上面那次翻车的结构性免疫，不是把阈值调小。
+
+`MIN_REDIRECT_CHARS = 12`：本批数据所有负样本残句 **≥ 53 字**（实测 53/96/103~146/144~162），
+故任何合理取值都不改变本批判定；选 12 是为未来更短回答留余量（只要"有实质内容"，不要"够长"）。
+计数前剥离空白与 Markdown 标记。
+
+### 本次重判结果（本地 artifact，非新 run）
+
+问题级 **15/15**；记录级四态分布：
+
+| state | 记录数（75） | 问题数（15） |
+|---|---|---|
+| SYSTEM_REFUSE | 40 | 8 |
+| REDIRECTED | 20 | 4 |
+| REFUSED | **0** | **0** |
+| DELIVERED | 15 | 3 |
+
+- 负样本被误判 DELIVERED = **0**（硬门禁要求）
+- 正样本 delivery_rate = 1.0
+- "论文作者"从 `refused=True` 翻转为 `DELIVERED`（test_set 的 `ground_truth_keywords` 正是 "Anonymous"，
+  落定的金标即"占位值也是答案"）
+- **REFUSED 在本批是空类**：LLM 分支的 4 条负样本全落 REDIRECTED，本批没有裸拒答。
+  若下次 live run 仍为空，考虑正式塌缩成三态，不要为一个理论类别保留整套分支。
+
+### 首次量化：两层拒答机制的分解
+
+新轴按极性聚合后，把 09-15「reject_accuracy 语义边界」一节留下的缺口补上了：
+
+| 阶段 | 拦下的负样本 | 占 12 条负样本 |
+|---|---|---|
+| confidence 闸（qa.py，用户看不到 LLM） | 8 条 | **0.667** |
+| LLM 自拒（进 LLM 后仍未交付） | 4 条 | **0.333** |
+| **端到端 non_delivery** | **12 条** | **1.000** |
+
+其中 confidence 闸的 0.667 与 RESULTS.md 长期使用的 `reject_accuracy = 0.667` **逐位相同** ——
+证实该指标确实只测子系统 A。而记录级口径是 40/60 = 0.667 与 20/60 = 0.333，同一比例。
+**用户实际感知的拒答率是 1.000，不是 0.667。**
+
+### 附带的可观测性
+
+- `system_refuse_by = {confidence: 40, template: 0}` —— 本批**模板正则一次都没触发**，
+  它是"未被执行的保险"。一旦将来 template > 0 而 conf ≥ 阈值，即为阈值漂移告警。
+- 该保险不是多余的：实测 SYSTEM 模板的尾句恒为 **17 字 ≥ 12**，
+  若闸 0 失效且无模板正则，这 40 条会被误判成 REDIRECTED。
+- `summary` 保留 legacy 的 `refused_count / refused_ratio / stable` 三字段（口径未改），
+  新增 `state / state_counts / stable_on_state`；聚合块在顶层 `aggregate`。
+- 每条 `results` 记录含 `expect_reject` 与 `keywords` ——
+  因为 **state 本身不携带极性**（REDIRECTED 对负样本是正确、对正样本是失败），
+  下游解读必须有极性上下文；同时这让 artifact 自带标注快照，便于日后离线重判。
+
+### 已知盲区（未修，与 legacy 同一盲区）
+
+- 负样本的 `ground_truth_keywords` 为空，**测不出"负样本被真交付"**。
+- 若 LLM 先写"未找到"再夹带幻觉，会被记为 REDIRECTED（软拒），不会被识破。
+
+### 验证方式与残留风险
+
+本机缺 `langchain_openai`，无法导入 `qa`，故**不能 live 跑**。验证是用 fake `qa` 模块注入 +
+回放 artifact 答案，驱动 `probe_stability.main()` 的**真实代码路径**（区分 / results 组装 /
+summary / aggregate），共 26 项断言全通过，含：legacy `refused` 与 09-16 逐条一致（75/75）、
+四态分布、gate_split、模板兜底、残句恰好卡 12/11、英文拒答、marker 在中段、空/None answer。
+
+**残留风险（重要）**：上述 15/15 是在**同一批 15 条上拟合出来的自洽性**，
+不是系统能力的证明。唯一诚实的检验是**下一次真实 CI run 用新数据重跑混淆表**。
+在此之前不要把 15/15 当作结论引用。
+
+### 相关文件
+
+- 探针：`rag-private-docs/src/probe_stability.py`（唯一功能改动；qa.py / evaluator.py / retriever.py / probe.yml 均未改）
+- 判定输入：`rag-private-docs/eval/test_set.json`（`expect_reject` + `ground_truth_keywords`）

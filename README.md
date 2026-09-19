@@ -187,7 +187,11 @@ cd dsh-web-RAG
 
 虚拟环境是把项目依赖隔离在独立文件夹里，避免污染系统 Python。
 
-在项目根目录下运行：
+**先进入项目实际内容目录**（虚拟环境、依赖、索引、运行都在 `rag-private-docs/` 里操作，不是仓库根）：
+
+cd rag-private-docs
+
+然后在此目录下运行：
 
 # Windows CMD / PowerShell 通用
 py -3.11 -m venv .venv
@@ -262,6 +266,7 @@ python indexer.py --force
 
 ### 第八步：启动网页界面
 
+cd src
 streamlit run app.py
 
 浏览器会自动打开 http://localhost:8501 。如果没自动打开，手动访问该地址。

@@ -899,8 +899,43 @@ probe_stability.py 的 POSITIVE_SAMPLES 硬编码三条
 未被探针覆盖。因此 1.0 只说明"被测的 3 条全部交付"，
 不能推广到 test_set 的全部 9 条正样本。扩样是独立的外推检验。
 
+> **注（2026-09-19）**：本段所述限制已解除。
+> commit `4d924b5` 删除了 POSITIVE_SAMPLES 硬编码，
+> probe 现覆盖 test_set 全部 9 条正样本。run `35425691671` 实测：
+> `positive.questions = 9`、`delivered = 45/45`、`delivery_rate = 1.0`
+> —— 原 3 条样本上的 1.0 得到全量复现。详见下文 2026-09-19 节。
+
 ### 数据来源声明
 
 run 元数据（run id / run_number / head_sha / conclusion / 时间戳）由 GitHub API 核对确认。
 上述聚合数字来自该 run 的 CI 输出（artifact `probe-stability-result` 需 token 才能下载，
 无 token 时 zip 端点返回 401），**未做二次独立解析**。
+
+## 2026-09-19 probe 正样本扩样（3 → 9）
+
+### 改动
+
+- commit `4d924b5`：删除 `POSITIVE_SAMPLES` 硬编码，
+  `positives` 改为 `[r for r in test_set if not r.get("expect_reject")]`
+
+### 验证（run 35425691671）
+
+| 指标 | 扩样前 | 扩样后 |
+|---|---|---|
+| n_records | 75 | 105 |
+| positive.questions | 3 | 9 |
+| DELIVERED | 15 | 45 |
+| positive.delivery_rate | 1.0 | 1.0 |
+| 负样本三项 | 40/20/0 | 40/20/0 |
+| gate_split | .667/.333 | .667/.333 |
+
+### 结论
+
+- 扩样未暴露新问题：先前 3 条上的 1.0 是全量 9 条的真实反映，不是样本偏差
+- 负样本侧指标逐位不变 → 扩样只影响正样本计数，无副作用
+
+### 待办
+
+- test_set 的 `q_What_does_the_paper_say_about_` 关键词含 `op-1`（疑似 `top-1` 笔误）——
+  在本次 9 条正样本中侥幸命中（`op-1` 是 `Top-1` 子串），但关键词升格为 DELIVERED
+  判据后，脏关键词是隐患。需列入关键词清理。

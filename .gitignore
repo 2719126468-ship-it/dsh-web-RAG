@@ -65,3 +65,4 @@ rag-private-docs/eval/results/
 *.bak
 probe_stability_results.json
 .devx/
+eval-result/

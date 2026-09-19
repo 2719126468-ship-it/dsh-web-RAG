@@ -305,11 +305,9 @@ python src/watcher.py
       hit_at_1                 = 1.0
       hit_at_3                 = 1.0
       hit_at_5                 = 1.0
-      context_precision        = 0.400
-      context_recall           = 1.0
+      context_precision        = 0.378
+      context_recall           = 0.926
       reject_accuracy          = 0.667
-
-（注：上文 `context_recall = 1.0` 属旧口径，沿自 2026-09-13 的 12 正 + 10 负测试集，未在 dev 集复测。）
 
 **指标含义**：
 

@@ -940,3 +940,22 @@ run 元数据（run id / run_number / head_sha / conclusion / 时间戳）由 Gi
   PDF 提取文本中 "top-1" 被连字符+换行切断，提取结果即为 `op-1`。
   见 README v6 日志与 commit `0b5f57d`。
   该关键词匹配实际提取文本，无隐患。
+
+## 待办（跨轮次）
+
+本节汇总已知但未决的事项，跨设备可见。完成后挪入对应事件记录节，不留在此。
+
+- [ ] **README 测试数字的维护方式**（2026-09-19 记录）
+
+  口径说明：README L20「pytest，N 个用例」的 N 取**本地 pytest 收集数**
+  （passed + skipped），不是 passed 数、也不是 CI 数。当前 N=96
+  （本地 94 passed + 2 skipped；CI 3.11/3.12 各 92 passed + 4 skipped）。
+  两侧收集数一致 = 96；CI 少 2 passed 是因为 CI 无 .env / DEEPSEEK_API_KEY，
+  `test_env_file_exists` 与 `test_api_key_format` 由本地实跑变为 CI skip。
+
+  待决问题：硬编码用例数会随测试增长持续过时——历史已连续失真两轮
+  （48 → 55 → 96）。三个候选方案：
+
+  1. **去数字** —— 改成不含计数的表述（如 `pytest，本地 / CI 双版本全绿`）
+  2. **加 CI badge** —— 动态、不会过时（但 badge 一般只显示状态，不显示用例数）
+  3. **保持现状** —— 每次加测试时手动更新（历史上已漏两轮）

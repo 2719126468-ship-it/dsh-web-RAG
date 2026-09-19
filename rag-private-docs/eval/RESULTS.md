@@ -941,21 +941,97 @@ run 元数据（run id / run_number / head_sha / conclusion / 时间戳）由 Gi
   见 README v6 日志与 commit `0b5f57d`。
   该关键词匹配实际提取文本，无隐患。
 
+## 2026-09-19 README 测试数字：三候选评估 → 落定「保持现状 + CI 校验」
+
+### 背景
+
+README「能力速览」有一行硬编码用例数（L20），随测试增长持续过时，
+历史已连续失真两轮（48 → 55 → 96）。本节记录三个候选方案的评估与最终取舍，
+结论是把「静默失真」改成「CI 硬报红」。
+
+### 三个候选的评估
+
+1. **去数字**（改成不含计数的表述）
+   - 优点：彻底消除耦合，改动最小（1 行）。
+   - 未采纳原因：会丢失「用例规模」这一对读者有用的信号；
+     且若写成「本地 / CI 双版本全绿」，「全绿」本身是会过期的**状态断言**
+     （CI 一旦红即变假话）——只是把「数字漂移」换成「状态漂移」。
+2. **加 CI badge**（动态、不会过时）
+   - 关键事实：**pass/fail badge 早已存在**，即 README L5 的
+     `[![Test](.../workflows/test.yml/badge.svg)](...)`。它本身不会过时，无需新增。
+   - 真正缺的只是「用例数」，而 **GitHub 原生 workflow badge 不暴露用例数**。
+     要显示数字只有 shields.io endpoint badge + CI 发布 JSON 一途，
+     需**新建分支或配置 PAT Secret**（新增基建），且 badge 只能显示单一总数、
+     会**丢失 README 现存的本地/CI 双口径**。
+   - 未采纳原因：为一个装饰性数字引入外部分支/Secret 依赖，性价比最低。
+3. **保持现状 + 加校验**（✅ 采纳）
+   - 优点：不牺牲信息量（数字与双口径都保留）；漂移即 CI 报红；零新增基建/依赖。
+   - 代价：每次加测试必须在同一 commit 里同步 README（把「容易忘」变成「必须做」）。
+
+### 落地实现
+
+- 新建 `tests/test_readme_test_count.py`：读 README 的正则
+  `pytest[，,]\s*(\d+)\s*个用例` 取声明值，用
+  `pytest tests/ --collect-only -q -p no:cacheprovider` 的子进程输出取真实收集数，
+  两者不等即 `pytest.fail`，失败信息直接给出「应改成几」。
+- 解析失败 / 子进程非零退出 / README 找不到数字模式 → **一律 `pytest.fail` 硬报错**，
+  不 `pytest.skip` 静默放过（与项目「不静默降级」的哲学一致）。
+- 用 `--collect-only`：**只收集不执行**，故不会递归调用本测试自身。
+
+### 为什么判据是「收集数」而不是 passed 数
+
+口径（原「待办」条目的定义，现随本条一并保留在案）：README L20「pytest，N 个用例」的 N 取
+**pytest 收集数（passed + skipped）**，不是 passed 数、也不是 CI 侧某个特定数字。
+原记录：N=96（本地 94 passed + 2 skipped；CI 3.11/3.12 各 92 passed + 4 skipped），
+两侧收集数一致 = 96；CI 少 2 passed 是因为 CI 无 `.env` / `DEEPSEEK_API_KEY`，
+`test_env_file_exists` 与 `test_api_key_format` 由本地实跑变为 CI skip。
+
+补一条实现层面的理由，说明为何**只有收集数**可作校验判据：
+
+- 本地有 `.env`，CI 没有；`config.py:8` 的 `load_dotenv()` 在 import 时把 `.env` 注入
+  `os.environ`，于是 `test_api_key_format` 在本地**实跑通过**、在 CI **skip**。
+  （实测：`test_api_key_format` 在本地 PASSED 依赖测试执行顺序——
+  先跑的 `test_config_values` 导入了 config，已完成 `load_dotenv`。）
+- 因此 passed/skipped 的**拆分**随环境变化（本地 2 skipped / CI 4 skipped），
+  但**收集数**在两侧一致 —— 只有收集数可跨环境校验。
+- 本测试**只校验总数**，括号里的 `N passed, M skipped` 拆分为环境相关，不纳入断言。
+
+### 首次自举：96 → 97
+
+新增本测试本身使收集数 +1，故 README L20 数值同步更新（句形态不变）：
+
+    本地 94 passed, 2 skipped  →  95 passed, 2 skipped
+    CI   92 passed, 4 skipped  →  93 passed, 4 skipped
+    收集数 96 → 97
+
+这是新校验的第一次生产使用：若不同步，CI 立刻红。
+
+### 验证（本地实跑）
+
+- 全量：`pytest tests/` → **95 passed, 2 skipped**（收集 97），与 README 一致。
+- 负向 1：README 数字改成 95 → 校验 `pytest.fail`（信息：应改为 97）。
+- 负向 2：把 L20 措辞改成不含「个用例」→ 校验 `pytest.fail`（提示未找到数字声明）。
+- 环境前提：`tests/test_config_fields.py` / `test_memory.py` / `test_webhook.py` 用
+  **模块级** `pytest.importorskip("dotenv")`——本机 venv 缺 `python-dotenv` 时这三个模块
+  在**收集阶段**整体跳过，收集数会从 96 骤降到 57，校验会误报。
+  已在本机 `pip install python-dotenv` 后复测（96 → 97）；CI 侧 test.yml 本就安装该依赖，安全。
+
+### 附带观察（未修，独立于本任务）
+
+`tests/test_basic.py::test_api_key_format` 的本地通过具有**顺序依赖**：
+它读 `os.environ`，而该变量是在 `test_config_values` 导入 config 时被
+`load_dotenv()` 顺带注入的。单独运行 `pytest tests/test_basic.py::test_api_key_format`
+（不经 config 导入）会 skip 而非 pass。是否改为显式加载，留待单独决策。
+
+### 相关文件
+
+- 新增：`tests/test_readme_test_count.py`
+- 修改：`README.md`（L20 数值 96→97；「项目文件结构」tests/ 块补 2 行——
+  既有漏列的 `test_probe_state.py` + 本次新增的 `test_readme_test_count.py`）
+- 本节：从「待办（跨轮次）」移除该项，转为事件记录
+
 ## 待办（跨轮次）
 
 本节汇总已知但未决的事项，跨设备可见。完成后挪入对应事件记录节，不留在此。
 
-- [ ] **README 测试数字的维护方式**（2026-09-19 记录）
-
-  口径说明：README L20「pytest，N 个用例」的 N 取**本地 pytest 收集数**
-  （passed + skipped），不是 passed 数、也不是 CI 数。当前 N=96
-  （本地 94 passed + 2 skipped；CI 3.11/3.12 各 92 passed + 4 skipped）。
-  两侧收集数一致 = 96；CI 少 2 passed 是因为 CI 无 .env / DEEPSEEK_API_KEY，
-  `test_env_file_exists` 与 `test_api_key_format` 由本地实跑变为 CI skip。
-
-  待决问题：硬编码用例数会随测试增长持续过时——历史已连续失真两轮
-  （48 → 55 → 96）。三个候选方案：
-
-  1. **去数字** —— 改成不含计数的表述（如 `pytest，本地 / CI 双版本全绿`）
-  2. **加 CI badge** —— 动态、不会过时（但 badge 一般只显示状态，不显示用例数）
-  3. **保持现状** —— 每次加测试时手动更新（历史上已漏两轮）
+（当前无未决事项。）

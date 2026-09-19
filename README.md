@@ -17,7 +17,7 @@
 |---|---|
 | 开源协议 | MIT（见 [LICENSE](LICENSE)） |
 | CI | GitHub Actions，Python 3.11 / 3.12 双版本 |
-| 测试 | pytest，96 个用例（本地 94 passed, 2 skipped；CI 3.11 / 3.12 各 92 passed, 4 skipped）|
+| 测试 | pytest，97 个用例（本地 95 passed, 2 skipped；CI 3.11 / 3.12 各 93 passed, 4 skipped）|
 | 容器化 | Dockerfile + .dockerignore + docker.yml |
 | 一键安装 | sh install.sh |
 | 健康检查 | sh diagnose.sh |
@@ -120,6 +120,8 @@ RAG 的解决方案很简单：你问问题时，先从你电脑里找出相关�
     │   ├── test_config_fields.py
     │   ├── test_eval_set.py
     │   ├── test_memory.py
+    │   ├── test_probe_state.py
+    │   ├── test_readme_test_count.py
     │   └── test_webhook.py
     ├── .github/                        # CI 和模板
     │   ├── workflows/

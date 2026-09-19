@@ -17,7 +17,7 @@
 |---|---|
 | 开源协议 | MIT（见 [LICENSE](LICENSE)） |
 | CI | GitHub Actions，Python 3.11 / 3.12 双版本 |
-| 测试 | pytest，48 个用例（CI：44 passed, 4 skipped；本地依赖完整时全绿）|
+| 测试 | pytest，55 个用例（本地 53 passed, 2 skipped；CI 3.11 / 3.12 各 51 passed, 4 skipped）|
 | 容器化 | Dockerfile + .dockerignore + docker.yml |
 | 一键安装 | sh install.sh |
 | 健康检查 | sh diagnose.sh |
@@ -106,7 +106,7 @@ RAG 的解决方案很简单：你问问题时，先从你电脑里找出相关�
 
     dsh-web-RAG/                        # 仓库根目录
     ├── rag-private-docs/               # 项目实际内容
-    │   ├── src/                        # 源代码（30 个文件）
+    │   ├── src/                        # 源代码（32 个文件）
     │   ├── docs/                       # 你的文档放这里
     │   ├── example_lessons/            # 5 个迷你实验
     │   ├── eval/                       # 自定义测试集（可选）
@@ -118,6 +118,7 @@ RAG 的解决方案很简单：你问问题时，先从你电脑里找出相关�
     ├── tests/                          # 单元测试
     │   ├── test_basic.py
     │   ├── test_config_fields.py
+    │   ├── test_eval_set.py
     │   ├── test_memory.py
     │   └── test_webhook.py
     ├── .github/                        # CI 和模板
@@ -289,9 +290,9 @@ python src/watcher.py
     cd src
     python evaluator.py
 
-输出示例（17 条：12 正 + 5 负）：
+输出示例（当前 dev 集 21 条：9 正 + 12 负。以下数值为 dev 集实测值，非历史演示）：
 
-    问题数: 17
+    问题数: 21
 
     [OK] Q: 什么是 RAG？
        必须引用: 01-rag-intro.md | Top-1: docs/01-rag-intro.md
@@ -299,14 +300,16 @@ python src/watcher.py
     ...
 
     汇总指标
-      num_positive             = 12
-      num_negative             = 5
+      num_positive             = 9
+      num_negative             = 12
       hit_at_1                 = 1.0
       hit_at_3                 = 1.0
       hit_at_5                 = 1.0
-      context_precision        = 0.567
+      context_precision        = 0.400
       context_recall           = 1.0
-      reject_accuracy          = 1.0
+      reject_accuracy          = 0.667
+
+（注：上文 `context_recall = 1.0` 属旧口径，沿自 2026-09-13 的 12 正 + 10 负测试集，未在 dev 集复测。）
 
 **指标含义**：
 
@@ -330,11 +333,13 @@ python src/watcher.py
 
 再跑 `python evaluator.py`，输出会多两个字段：
 
-    num_positive     = 12
-    num_negative     = 5
-    reject_accuracy  = 1.0
+    num_positive     = 9
+    num_negative     = 12
+    reject_accuracy  = 0.667
 
-**reject_accuracy**：正确拒答的负样本比例。拒答由 `qa.py` 的 `CONFIDENCE_THRESHOLD`（默认 0.30）判断——top-1 的 confidence 低于这个值，就回复"资料中未找到相关内容"。
+**reject_accuracy**：正确拒答的负样本比例。拒答由 `qa.py` 的 `CONFIDENCE_THRESHOLD`（默认 0.30）判断——取检索结果里**最高**的 confidence（不是 top-1 那一段），低于这个值就直接回复"资料中未找到相关内容"，这一步不调用 LLM。
+
+不过这**只是第一层闸**：confidence 过线的 query 仍会送给 LLM，由 LLM 依据 prompt 自行判断"资料里没有答案"从而拒答。所以 `reject_accuracy` 只反映第一层闸的拒答率，**不等于用户实际看到的拒答率**。
 
 如果 `reject_accuracy` 偏低，说明 confidence 普遍偏高，或阈值不合适。
 
@@ -352,7 +357,7 @@ python src/watcher.py
 
     指标                      之前         之后         变化
     hit_at_1               1.0000     1.0000 =  0.0000
-    context_precision      0.5670     0.6000 ↑  0.0330
+    context_precision      0.6220     0.4000 ↓  0.2220
     context_recall         1.0000     1.0000 =  0.0000
 
 **这是数据驱动调参的基础**：改一个参数，跑一次评估，对比变化。
@@ -434,6 +439,10 @@ v6 解决了两个长期被忽略的问题：
 - context_precision: 0.65 → 0.9（+38%）
 - context_recall: 0.951 → 1.0（完美）
 
+> 注（2026-09-14 复核）：本节 0.9 亦为短数字关键词污染所致。
+> 去污染后真实值 0.400，详见 eval/RESULTS.md 的
+> "2026-09-14 Part A：测试集去污染 + 分层"一节。
+
 ## 升级日志（v7）
 
 v7 发现了三个关键 bug 并修复，retriever 池现在干净了：
@@ -452,6 +461,10 @@ v7 发现了三个关键 bug 并修复，retriever 池现在干净了：
 | context_precision | 0.9 | 0.9 |
 | context_recall | 1.0 | 1.0 |
 | Qdrant 集合点 | 未知 | 44（干净）|
+
+> 注（2026-09-14 复核）：本节 0.9 亦为短数字关键词污染所致。
+> 去污染后真实值 0.400，详见 eval/RESULTS.md 的
+> "2026-09-14 Part A：测试集去污染 + 分层"一节。
 
 注意：v6 阶段曾测出 context_precision 1.0，但当时 Qdrant 集合已有 88-220 个重复点，属污染数据。清干净后（v7）为 0.9，这才是真实性能。如果以后想保持集合干净（44 点），按 v8 的经验跑 `indexer.py --force`。
 
@@ -718,8 +731,13 @@ reranker 给 0.91——比 10 条正样本里的 7 条都高。
 
 **这不是阈值能解决的**：正样本最低 0.37，负样本最高 0.91，区间完全重叠。
 
-**下一步**：集成 `critic.py`（CRAG 实现）到拒答链路，让 LLM 判断
-"这段 chunk 是否真的包含答案"，而不是只看 reranker 分数。
+**原方案**：集成 `critic.py`（CRAG 实现）到拒答链路，让 LLM 判断
+"这段 chunk 是否真的包含答案"。
+
+**状态**：该方向已于 2026-09-15 归档（commit `e900df7`）。
+实验结论：critic 的 MAYBE 折扣是 metric hacking（只降负样本 confidence、
+不改判定），纯过滤后对拒答零贡献。qa.py 不接入。
+详见 `eval/RESULTS.md` 的"critic 纯过滤契约确认"节。
 
 ### .doc 格式需要额外依赖
 

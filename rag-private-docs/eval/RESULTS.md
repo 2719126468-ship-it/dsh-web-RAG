@@ -934,8 +934,9 @@ run 元数据（run id / run_number / head_sha / conclusion / 时间戳）由 Gi
 - 扩样未暴露新问题：先前 3 条上的 1.0 是全量 9 条的真实反映，不是样本偏差
 - 负样本侧指标逐位不变 → 扩样只影响正样本计数，无副作用
 
-### 待办
+### 澄清：`op-1` 非笔误
 
-- test_set 的 `q_What_does_the_paper_say_about_` 关键词含 `op-1`（疑似 `top-1` 笔误）——
-  在本次 9 条正样本中侥幸命中（`op-1` 是 `Top-1` 子串），但关键词升格为 DELIVERED
-  判据后，脏关键词是隐患。需列入关键词清理。
+- `q_What_does_the_paper_say_about_` 的关键词 `op-1` **不是笔误**——
+  PDF 提取文本中 "top-1" 被连字符+换行切断，提取结果即为 `op-1`。
+  见 README v6 日志与 commit `0b5f57d`。
+  该关键词匹配实际提取文本，无隐患。

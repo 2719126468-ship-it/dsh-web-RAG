@@ -87,13 +87,6 @@ _MD_NOISE = re.compile(r"[*_`#>\[\]()\-•·\s]+")
 # 四态枚举顺序（用于输出与预置零值；顺序即"从最硬的拒答到真正的交付"）
 STATE_NAMES = ("SYSTEM_REFUSE", "REDIRECTED", "REFUSED", "DELIVERED")
 
-# 正样本对照（与旧版一致）
-POSITIVE_SAMPLES = [
-    "什么是 RAG？",
-    "软件开发合同的总金额是多少？",
-    "What are the authors of the synthetic study paper?",
-]
-
 
 def _strip_lead_refusal(answer: str):
     """剥离开头的拒答首句。返回 (是否命中, 残句)。未命中则残句 = 原文。"""
@@ -165,7 +158,7 @@ def main():
     positives = [
         (r["question"], "positive", False, list(r.get("ground_truth_keywords") or []))
         for r in test_set
-        if not r.get("expect_reject") and r["question"] in POSITIVE_SAMPLES
+        if not r.get("expect_reject")
     ]
 
     probes = negatives + positives

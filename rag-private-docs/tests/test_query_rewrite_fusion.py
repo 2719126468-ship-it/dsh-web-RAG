@@ -44,3 +44,10 @@ def test_fusion_assigns_fresh_rrf_and_removes_stale_scores():
     assert "rerank_score" not in fused[0]
     assert "confidence" not in fused[0]
     assert fused[1]["rrf_score"] == 1 / 62
+
+
+def test_qa_query_rewrite_path_reranks_fused_candidates():
+    qa_source = (Path(__file__).resolve().parent.parent / "src" / "qa.py").read_text()
+    assert "fused_hits = fuse_by_parent_id(all_hits)" in qa_source
+    assert "self.retriever.rerank_candidates(" in qa_source
+    assert "question, fused_hits" in qa_source

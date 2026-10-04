@@ -4,7 +4,7 @@
 ----
 README 的「能力速览」表里有一行硬编码用例数：
 
-    | 测试 | pytest，96 个用例（本地 94 passed, 2 skipped；CI 3.11 / 3.12 各 92 passed, 4 skipped）|
+    | 测试 | pytest，108 个用例（本地 104 passed, 4 skipped；CI 3.11 / 3.12 各 104 passed, 4 skipped）|
 
 这行历史上已连续失真两轮（48 → 55 → 96）—— 每次新增测试文件都可能忘记同步。
 本测试把这种「静默失真」变成「CI 硬报红」。

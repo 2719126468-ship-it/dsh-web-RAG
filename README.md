@@ -17,7 +17,7 @@
 |---|---|
 | 开源协议 | MIT（见 [LICENSE](LICENSE)） |
 | CI | GitHub Actions，Python 3.11 / 3.12 双版本 |
-| 测试 | pytest，108 个用例（本地 104 passed, 4 skipped；CI 3.11 / 3.12 各 104 passed, 4 skipped）|
+| 测试 | pytest，108 个用例（本地 106 passed, 2 skipped；CI 3.11 / 3.12 各 104 passed, 4 skipped）|
 | 容器化 | Dockerfile + .dockerignore + docker.yml |
 | 一键安装 | sh install.sh |
 | 健康检查 | sh diagnose.sh |
@@ -454,7 +454,7 @@ v7 发现了三个关键 bug 并修复，retriever 池现在干净了：
 
 1. **Index 累积 bug（最严重）**：`indexer.py --force` 之前用 `delete_collection` 看起来成功，但 Windows + SQLite WAL 模式下旧数据没真正删掉。重复 reindex 后旧向量累积（实测：跑 5 次累积到 220 个点）。修复：force 模式下 `shutil.rmtree(QDRANT_PATH)` 整个目录删掉，再创建空 client。
 2. **Per-source BM25 归一化**：`retriever.py _bm25_search` 现在按 source 做归一化（每个 source 最高得 1.0），防止长文档（多 token）压制短文档（少 token）。
-3. **Confidence 混合公式**：`retriever.py retrieve` 的 confidence 从纯 sigmoid(rerank_score) 改为 `0.8 * rerank + 0.2 * rrf`，让 reranker 主导同时保留 RRF 的文档级信号。
+3. **Confidence 混合公式**：`retriever.py` 的 confidence 使用 `0.8 * rerank + 0.2 * rrf`，其中 rerank 分数先通过 sigmoid 归一化到 0~1，RRF 则按本次返回候选集做相对归一化。该值是拒答闸门使用的**启发式置信信号**，不是统计学意义上的概率。
 4. **PDF metadata 保留**：`parent_child_splitter.py` 现在保留 `chunk_role=pdf_metadata` 的文档，不再走 parent-child 切分（真实 PDF 有 Title/Author 时会生效）。
 5. **诊断脚本**：`src/diagnostic.py` 新建 6 项快速健康检查（Qdrant 集合大小、BM25、Dense、Hybrid、Reranker、Mini-evaluator），能自动检测出索引累积类问题。
 

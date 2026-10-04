@@ -117,7 +117,15 @@ def fuse_by_parent_id(hit_lists: List[List[dict]]) -> List[dict]:
             score_by_key.setdefault(key, 0.0)
             score_by_key[key] += 1.0 / (60 + rank + 1)
     ranked_keys = sorted(score_by_key, key=lambda k: score_by_key[k], reverse=True)
-    return [items_by_key[k] for k in ranked_keys]
+    fused = []
+    for key in ranked_keys:
+        item = dict(items_by_key[key])
+        # Scores from each independent retrieval pass are stale after fusion.
+        item.pop("rerank_score", None)
+        item.pop("confidence", None)
+        item["rrf_score"] = score_by_key[key]
+        fused.append(item)
+    return fused
 
 
 if __name__ == "__main__":

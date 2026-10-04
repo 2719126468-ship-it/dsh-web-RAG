@@ -178,6 +178,31 @@ class HybridRetriever:
         ranked = sorted(candidates, key=lambda x: x.get("rerank_score", 0), reverse=True)
         return ranked[:top_n]
 
+    def rerank_candidates(
+        self, query: str, candidates: List[Dict[str, Any]], top_k: int = None
+    ) -> List[Dict[str, Any]]:
+        """Rerank already-fused candidates and recompute confidence."""
+        if top_k is None:
+            top_k = config.TOP_K
+        final = self._rerank(query, candidates, top_n=top_k)
+        self._assign_confidence(final)
+        return final
+
+    @staticmethod
+    def _assign_confidence(final: List[Dict[str, Any]]) -> None:
+        """Assign confidence from the current rerank/RRF scores only."""
+        if not final:
+            return
+        if "rerank_score" in final[0]:
+            max_rrf = max(c.get("rrf_score", 0) for c in final)
+            for c in final:
+                r_prob = max(0.0, min(1.0, c.get("rerank_score", 0.0)))
+                rf = c.get("rrf_score", 0.0) / max_rrf if max_rrf > 0 else 0.0
+                c["confidence"] = 0.8 * r_prob + 0.2 * rf
+        else:
+            for c in final:
+                c["confidence"] = min(1.0, c.get("rrf_score", 0.0) * 10)
+
     def retrieve(self, query: str, top_k: int = None) -> List[Dict[str, Any]]:
         """Run full hybrid retrieval pipeline."""
         if top_k is None:
@@ -204,24 +229,7 @@ class HybridRetriever:
         candidates = merged[:30]
 
         # Step 4: rerank
-        final = self._rerank(query, candidates, top_n=top_k)
-
-        # Normalize confidence to 0-1 range.
-        # Strategy: blend rerank score (cross-encoder semantic judgment) with rrf_score
-        # (hybrid retrieval authority). This gives the reranker dominant weight while
-        # preserving document-level signal from the RRF score.
-        if final and "rerank_score" in final[0]:
-            max_rrf = max(c.get("rrf_score", 0) for c in final)
-            for c in final:
-                # rerank_score 已是 0-1 概率（BGE-reranker-base 输出）
-                # 直接用原始分数，不除以 max——除法会抹掉绝对置信度
-                r_prob = c.get("rerank_score", 0)
-                rf = c.get("rrf_score", 0) / max_rrf if max_rrf > 0 else 0
-                # 80% rerank, 20% rrf — reranker dominates
-                c["confidence"] = 0.8 * r_prob + 0.2 * rf
-        else:
-            for c in final:
-                c["confidence"] = min(1.0, c.get("rrf_score", 0) * 10)
+        final = self.rerank_candidates(query, candidates, top_k=top_k)
         return final
 
     def format_for_llm(self, hits: List[Dict[str, Any]]) -> str:

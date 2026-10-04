@@ -78,7 +78,10 @@ class RAGEngine:
                 if len(queries) > 1:
                     print(f"[rewrite] {len(queries)} variants: {queries}")
                     all_hits = [self.retrieve(q, top_k=top_k) for q in queries]
-                    hits = fuse_by_parent_id(all_hits)
+                    fused_hits = fuse_by_parent_id(all_hits)
+                    hits = self.retriever.rerank_candidates(
+                        question, fused_hits, top_k=top_k
+                    )
                 else:
                     hits = self.retrieve(question, top_k=top_k)
             except Exception as e:

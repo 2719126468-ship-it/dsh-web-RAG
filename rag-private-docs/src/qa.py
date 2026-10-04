@@ -9,6 +9,7 @@ from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
 
 from config import config
 from retriever import HybridRetriever
+from answerability import AnswerabilityChecker
 from outline import PROJECT_ROOT, find_heading_at_line, snippet_with_context
 
 CONFIDENCE_THRESHOLD = 0.30
@@ -26,9 +27,6 @@ STRICT_SYSTEM_PROMPT = """你是私人知识库问答助手。
 
 USER_TEMPLATE = """【参考资料】
 {context}
-
-【对话历史】
-{history}
 
 【当前问题】
 {question}
@@ -48,6 +46,7 @@ def format_history(messages: List[Dict[str, str]], max_turns: int = 4) -> str:
 class RAGEngine:
     def __init__(self, use_rerank: bool = True):
         self.retriever = HybridRetriever(use_rerank=use_rerank)
+        self.answerability = AnswerabilityChecker()
         if not config.DEEPSEEK_API_KEY:
             raise ValueError("DEEPSEEK_API_KEY missing. Set it in .env")
         self.llm = ChatOpenAI(
@@ -103,8 +102,16 @@ class RAGEngine:
                 "confidence": max_conf,
             }
 
+        answerability = self.answerability.check(question, hits)
+        if answerability["status"] == "UNANSWERABLE":
+            return {
+                "answer": "资料中未找到该问题所要求的具体答案。虽然检索到了相关内容，但这些内容不足以支持这个问题的回答。",
+                "sources": self._enrich_sources(hits[:2]),
+                "confidence": max_conf,
+                "answerability": answerability,
+            }
+
         context = self.retriever.format_for_llm(hits)
-        history_text = format_history(history[:-1])
 
         # 注入用户记忆（可选，config.ENABLE_MEMORY=True 时启用）
         memory_text = ""
@@ -128,9 +135,7 @@ class RAGEngine:
         # Current question with context
         if memory_text:
             context = memory_text + "\n\n" + context
-        current = USER_TEMPLATE.format(
-            context=context, history=history_text, question=question
-        )
+        current = USER_TEMPLATE.format(context=context, question=question)
         msgs.append(HumanMessage(content=current))
 
         response = self.llm.invoke(msgs)
@@ -140,6 +145,7 @@ class RAGEngine:
             "answer": answer,
             "sources": self._enrich_sources(hits),
             "confidence": max_conf,
+            "answerability": answerability,
         }
 
     def _enrich_sources(self, hits: List[Dict[str, Any]]) -> List[Dict[str, Any]]:

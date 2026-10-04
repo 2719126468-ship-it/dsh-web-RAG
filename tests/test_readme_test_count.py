@@ -22,7 +22,7 @@ N 取 **pytest 收集数（collected）**，即 passed + skipped，
     所以只有收集数可跨环境校验。
 
 为什么只校验总数，不校验括号里的拆分：
-    括号里的 `94 passed, 2 skipped` 是环境相关的（见上），无法在同一断言里跨环境成立。
+    括号里的 passed / skipped 拆分是环境相关的（见上），无法在同一断言里跨环境成立。
     本测试只守住「总数」这一条两侧一致的契约。
 
 设计要点
@@ -104,5 +104,5 @@ def test_readme_test_count_matches_actual_collection():
     actual = _actual_collected_count()
     assert declared == actual, (
         f"README.md 声明的用例数（{declared}）与实际 pytest 收集数（{actual}）不一致。\n"
-        f"请把 README「能力速览」里的用例数改为 {actual}（本地 {actual - 2} passed, 2 skipped）。"
+        f"请把 README「能力速览」里的用例数改为 {actual}。"
     )

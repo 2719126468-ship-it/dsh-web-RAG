@@ -7,7 +7,7 @@ Pipeline:
   4. Optional: BGE cross-encoder reranks the merged top-20
   5. Return top-K with similarity scores
 """
-import math
+import inspect
 import re
 from pathlib import Path
 from typing import List, Dict, Any
@@ -19,6 +19,7 @@ from rank_bm25 import BM25Okapi
 
 from qdrant_factory import create_qdrant_client, QDRANT_PATH
 
+from confidence import assign_confidence
 from config import config
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
@@ -74,8 +75,15 @@ class HybridRetriever:
             return None
         try:
             from sentence_transformers import CrossEncoder
+            from torch import nn
+
             print("[info] Loading reranker (BGE-reranker-base)...")
-            self._reranker = CrossEncoder("BAAI/bge-reranker-base")
+            # Make the score scale explicit: BGE reranker relevance is mapped
+            # through sigmoid to [0, 1], independent of the library default.
+            activation = {"activation_fn": nn.Sigmoid()}
+            if "activation_fn" not in inspect.signature(CrossEncoder).parameters:
+                activation = {"default_activation_function": nn.Sigmoid()}
+            self._reranker = CrossEncoder("BAAI/bge-reranker-base", **activation)
         except Exception as e:
             raise RuntimeError(
                 f"Reranker is REQUIRED but failed to load: {e}\n"
@@ -185,23 +193,8 @@ class HybridRetriever:
         if top_k is None:
             top_k = config.TOP_K
         final = self._rerank(query, candidates, top_n=top_k)
-        self._assign_confidence(final)
+        assign_confidence(final)
         return final
-
-    @staticmethod
-    def _assign_confidence(final: List[Dict[str, Any]]) -> None:
-        """Assign confidence from the current rerank/RRF scores only."""
-        if not final:
-            return
-        if "rerank_score" in final[0]:
-            max_rrf = max(c.get("rrf_score", 0) for c in final)
-            for c in final:
-                r_prob = max(0.0, min(1.0, c.get("rerank_score", 0.0)))
-                rf = c.get("rrf_score", 0.0) / max_rrf if max_rrf > 0 else 0.0
-                c["confidence"] = 0.8 * r_prob + 0.2 * rf
-        else:
-            for c in final:
-                c["confidence"] = min(1.0, c.get("rrf_score", 0.0) * 10)
 
     def retrieve(self, query: str, top_k: int = None) -> List[Dict[str, Any]]:
         """Run full hybrid retrieval pipeline."""

@@ -4,7 +4,7 @@ from pathlib import Path
 import sys
 
 PROJECT = Path(__file__).resolve().parent.parent
-SRC = PROJECT / "rag-private-docs" / "src"
+SRC = PROJECT / "src"
 sys.path.insert(0, str(SRC))
 
 from answerability import AnswerabilityChecker

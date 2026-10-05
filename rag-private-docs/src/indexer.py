@@ -236,7 +236,7 @@ class IncrementalIndexer:
                         print(f"[info] Force reindex: removed {QDRANT_PATH} (after retry)")
                     except PermissionError:
                         print(f"[warn] Could not delete {QDRANT_PATH} - another process may hold a lock")
-                        print(f"[warn] Trying to continue with existing collection...")
+                        print("[warn] Trying to continue with existing collection...")
             QDRANT_PATH.mkdir(parents=True, exist_ok=True)
             # Recreate client and collection fresh
             self.client = create_qdrant_client()
@@ -247,7 +247,7 @@ class IncrementalIndexer:
             if self.client.collection_exists(config.COLLECTION_NAME):
                 try:
                     self.client.delete_collection(config.COLLECTION_NAME)
-                    print(f"[info] Deleted existing collection for force reindex")
+                    print("[info] Deleted existing collection for force reindex")
                 except Exception as e:
                     print(f"[warn] delete_collection failed: {e}")
 
@@ -257,7 +257,7 @@ class IncrementalIndexer:
                     vectors_config=models.VectorParams(size=config.EMBEDDING_DIM, distance=models.Distance.COSINE),
                 )
             else:
-                print(f"[warn] Collection still exists after force; may accumulate")
+                print("[warn] Collection still exists after force; may accumulate")
             self.store = None
             self.manifest = {}  # Clear manifest since we're rebuilding
             print("[info] Collection recreated")
@@ -327,7 +327,7 @@ class IncrementalIndexer:
                     print("[info] DEEPSEEK_API_KEY not set; skipping contextual retrieval")
 
             if all_chunks:
-                print(f"[info] Embedding and upserting...")
+                print("[info] Embedding and upserting...")
                 embed_start = time.time()
                 if self.store is None:
                     # Collection already created in __init__; build the store and add

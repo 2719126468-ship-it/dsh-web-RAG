@@ -66,7 +66,7 @@ def extract_images_with_captions(
     try:
         import fitz
     except ImportError:
-        print(f"[warn] 未安装 PyMuPDF，跳过多模态解析。安装：pip install PyMuPDF")
+        print("[warn] 未安装 PyMuPDF，跳过多模态解析。安装：pip install PyMuPDF")
         return []
 
     try:

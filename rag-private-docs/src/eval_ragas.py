@@ -59,7 +59,7 @@ def build_dataset(test_set: List[Dict], qa_results: List[Dict]):
     empty_count = sum(1 for c in contexts_all if not c)
     if empty_count == n:
         print(f"[warn] 所有 {n} 条结果的 contexts 都为空。")
-        print(f"[warn] 检查输入格式：应含 'contexts' 或 'sources' 字段。")
+        print("[warn] 检查输入格式：应含 'contexts' 或 'sources' 字段。")
     elif empty_count > 0:
         print(f"[warn] {empty_count}/{n} 条结果的 contexts 为空，这些条目的 RAGAS 分数会失真。")
 

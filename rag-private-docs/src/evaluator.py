@@ -28,7 +28,7 @@ HOLDOUT_SET_PATH = PROJECT_ROOT / "eval" / "test_set_holdout.json"
 # confidence falls below this threshold.
 CONFIDENCE_THRESHOLD_FOR_EVAL = 0.30
 
-# Default test set: 8 questions across 6 documents
+# Default test set: 12 positive questions across 6 documents
 DEFAULT_TEST_SET = [
     {
         "question": "什么是 RAG？",

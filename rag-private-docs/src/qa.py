@@ -106,9 +106,12 @@ class RAGEngine:
             }
 
         answerability = self.answerability.check(question, hits)
-        if answerability["status"] == "UNANSWERABLE":
+        if self.answerability.enabled and answerability["status"] != "ANSWERABLE":
             return {
-                "answer": "资料中未找到该问题所要求的具体答案。虽然检索到了相关内容，但这些内容不足以支持这个问题的回答。",
+                "answer": (
+                    "资料中无法确认该问题的具体答案。"
+                    "为避免编造信息，本次不生成推测性回答。"
+                ),
                 "sources": self._enrich_sources(hits[:2]),
                 "confidence": max_conf,
                 "answerability": answerability,

@@ -10,7 +10,8 @@
     "must_cite": "01-rag-intro.md",
     "expect_reject": false,
     "negative_type": null,
-    "difficulty": "easy"
+    "difficulty": "easy",
+    "expect_answerability": "ANSWERABLE"
   },
   {
     "id": "q_LangChain_有哪些文档加载器",
@@ -23,7 +24,8 @@
     "must_cite": "02-langchain-notes.md",
     "expect_reject": false,
     "negative_type": null,
-    "difficulty": "easy"
+    "difficulty": "easy",
+    "expect_answerability": "ANSWERABLE"
   },
   {
     "id": "q_DeepSeek_的_API_怎么调用",
@@ -36,7 +38,8 @@
     "must_cite": "03-deepseek-api.md",
     "expect_reject": false,
     "negative_type": null,
-    "difficulty": "easy"
+    "difficulty": "easy",
+    "expect_answerability": "ANSWERABLE"
   },
   {
     "id": "q_软件开发合同的总金额是多少",
@@ -49,7 +52,8 @@
     "must_cite": "04-contract-2024-0312.md",
     "expect_reject": false,
     "negative_type": null,
-    "difficulty": "easy"
+    "difficulty": "easy",
+    "expect_answerability": "ANSWERABLE"
   },
   {
     "id": "q_12_月版本什么时候上线",
@@ -61,7 +65,8 @@
     "must_cite": "06-email-client-dec-launch.md",
     "expect_reject": false,
     "negative_type": null,
-    "difficulty": "easy"
+    "difficulty": "easy",
+    "expect_answerability": "ANSWERABLE"
   },
   {
     "id": "q_客户希望_12_月版本提前几天",
@@ -72,7 +77,8 @@
     "must_cite": "06-email-client-dec-launch.md",
     "expect_reject": false,
     "negative_type": null,
-    "difficulty": "easy"
+    "difficulty": "easy",
+    "expect_answerability": "ANSWERABLE"
   },
   {
     "id": "q_What_does_the_paper_say_about_",
@@ -84,7 +90,8 @@
     "must_cite": "papers/test-two-column-paper.pdf",
     "expect_reject": false,
     "negative_type": null,
-    "difficulty": "hard"
+    "difficulty": "hard",
+    "expect_answerability": "ANSWERABLE"
   },
   {
     "id": "q_论文中关于_BM25_的描述是什么",
@@ -96,7 +103,8 @@
     "must_cite": "papers/test-two-column-paper.pdf",
     "expect_reject": false,
     "negative_type": null,
-    "difficulty": "hard"
+    "difficulty": "hard",
+    "expect_answerability": "ANSWERABLE"
   },
   {
     "id": "q_What_are_the_authors_of_the_sy",
@@ -107,7 +115,8 @@
     "must_cite": "papers/test-two-column-paper.pdf",
     "expect_reject": false,
     "negative_type": null,
-    "difficulty": "hard"
+    "difficulty": "hard",
+    "expect_answerability": "ANSWERABLE"
   },
   {
     "id": "n_公司年假有多少天",
@@ -116,7 +125,8 @@
     "must_cite": "__none__",
     "expect_reject": true,
     "negative_type": "off_topic",
-    "difficulty": "easy"
+    "difficulty": "easy",
+    "expect_answerability": "UNANSWERABLE"
   },
   {
     "id": "n_Python_的_GIL_是什么",
@@ -125,7 +135,8 @@
     "must_cite": "__none__",
     "expect_reject": true,
     "negative_type": "off_topic",
-    "difficulty": "easy"
+    "difficulty": "easy",
+    "expect_answerability": "UNANSWERABLE"
   },
   {
     "id": "n_How_to_configure_Nginx_reverse",
@@ -134,7 +145,8 @@
     "must_cite": "__none__",
     "expect_reject": true,
     "negative_type": "off_topic",
-    "difficulty": "easy"
+    "difficulty": "easy",
+    "expect_answerability": "UNANSWERABLE"
   },
   {
     "id": "n_团队成员的绩效评分标准是什么",
@@ -143,7 +155,8 @@
     "must_cite": "__none__",
     "expect_reject": true,
     "negative_type": "off_topic",
-    "difficulty": "easy"
+    "difficulty": "easy",
+    "expect_answerability": "UNANSWERABLE"
   },
   {
     "id": "n_合同的违约金是多少",
@@ -152,7 +165,8 @@
     "must_cite": "__none__",
     "expect_reject": true,
     "negative_type": "topic_relevant_no_answer",
-    "difficulty": "hard"
+    "difficulty": "hard",
+    "expect_answerability": "UNANSWERABLE"
   },
   {
     "id": "n_DeepSeek_模型有多少参数",
@@ -161,7 +175,8 @@
     "must_cite": "__none__",
     "expect_reject": true,
     "negative_type": "topic_relevant_no_answer",
-    "difficulty": "hard"
+    "difficulty": "hard",
+    "expect_answerability": "UNANSWERABLE"
   },
   {
     "id": "n_合同的签字人是谁",
@@ -170,7 +185,8 @@
     "must_cite": "__none__",
     "expect_reject": true,
     "negative_type": "topic_relevant_no_answer",
-    "difficulty": "hard"
+    "difficulty": "hard",
+    "expect_answerability": "UNANSWERABLE"
   },
   {
     "id": "n_合同是否允许转包",
@@ -179,7 +195,8 @@
     "must_cite": "__none__",
     "expect_reject": true,
     "negative_type": "topic_relevant_no_answer",
-    "difficulty": "hard"
+    "difficulty": "hard",
+    "expect_answerability": "UNANSWERABLE"
   },
   {
     "id": "n_RAG_有哪些缺点",
@@ -188,7 +205,8 @@
     "must_cite": "__none__",
     "expect_reject": true,
     "negative_type": "topic_relevant_no_answer",
-    "difficulty": "hard"
+    "difficulty": "hard",
+    "expect_answerability": "UNANSWERABLE"
   },
   {
     "id": "n_Qdrant_怎么配置远程_server",
@@ -197,7 +215,8 @@
     "must_cite": "__none__",
     "expect_reject": true,
     "negative_type": "topic_relevant_no_answer",
-    "difficulty": "hard"
+    "difficulty": "hard",
+    "expect_answerability": "UNANSWERABLE"
   },
   {
     "id": "n_DeepSeek_API_的_QPS_限制是多少",
@@ -206,7 +225,8 @@
     "must_cite": "__none__",
     "expect_reject": true,
     "negative_type": "topic_relevant_no_answer",
-    "difficulty": "hard"
+    "difficulty": "hard",
+    "expect_answerability": "UNANSWERABLE"
   },
   {
     "id": "n_莫干山徒步路线全长多少公里",
@@ -215,6 +235,7 @@
     "must_cite": "__none__",
     "expect_reject": true,
     "negative_type": "topic_relevant_no_answer",
-    "difficulty": "hard"
+    "difficulty": "hard",
+    "expect_answerability": "UNANSWERABLE"
   }
 ]

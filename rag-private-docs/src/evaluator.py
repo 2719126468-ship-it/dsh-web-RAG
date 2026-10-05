@@ -297,21 +297,28 @@ def evaluate(retriever: HybridRetriever, test_set: List[Dict] = None) -> Dict[st
         answerability_rows = [
             r for r in rows if r.get("answerability_status") is not None
         ]
+        definitive_rows = [
+            r for r in answerability_rows
+            if r.get("answerability_status") in {"ANSWERABLE", "UNANSWERABLE"}
+        ]
         answerability_correct = 0
-        for r in answerability_rows:
-            expected_answerable = not r.get("expect_reject")
-            actual_answerable = r.get("answerability_status") == "ANSWERABLE"
-            if actual_answerable == expected_answerable:
+        for r in definitive_rows:
+            expected = "UNANSWERABLE" if r.get("expect_reject") else "ANSWERABLE"
+            if r.get("answerability_status") == expected:
                 answerability_correct += 1
         if answerability_rows:
-            summary["answerability_accuracy"] = round(
-                answerability_correct / len(answerability_rows), 3
+            summary["answerability_coverage"] = round(
+                len(definitive_rows) / len(answerability_rows), 3
             )
-            summary["num_answerability_evaluated"] = len(answerability_rows)
+            if definitive_rows:
+                summary["answerability_accuracy"] = round(
+                    answerability_correct / len(definitive_rows), 3
+                )
+            summary["num_answerability_evaluated"] = len(definitive_rows)
     summary["answer_hit_at_1"] = round(sum(r["answer_hit_at_1"] for r in positive_rows) / len(positive_rows), 3) if positive_rows else 0.0
     summary["answer_hit_at_3"] = round(sum(r["answer_hit_at_3"] for r in positive_rows) / len(positive_rows), 3) if positive_rows else 0.0
     summary["answer_hit_at_5"] = round(sum(r["answer_hit_at_5"] for r in positive_rows) / len(positive_rows), 3) if positive_rows else 0.0
-        # 按 negative_type 分层统计（Part A）
+    # 按 negative_type 分层统计（Part A）
     if negative_rows:
         by_type = {}
         for r in negative_rows:

@@ -18,9 +18,6 @@ import os
 import re
 from typing import Any, Dict, List, Optional
 
-from langchain_openai import ChatOpenAI
-from langchain_core.prompts import ChatPromptTemplate
-
 
 ANSWERABILITY_PROMPT = """你是私人知识库的“证据可回答性检查器”。
 
@@ -56,7 +53,7 @@ class AnswerabilityChecker:
         enabled = os.getenv("USE_ANSWERABILITY_CHECK", "true").lower() == "true"
         self.enabled = enabled
         self.llm = None
-        self.prompt = ChatPromptTemplate.from_template(ANSWERABILITY_PROMPT)
+        self.prompt = None
 
         if not enabled:
             return
@@ -65,6 +62,10 @@ class AnswerabilityChecker:
         if not api_key or api_key.startswith("sk-xxxxxxx"):
             return
 
+        from langchain_core.prompts import ChatPromptTemplate
+        from langchain_openai import ChatOpenAI
+
+        self.prompt = ChatPromptTemplate.from_template(ANSWERABILITY_PROMPT)
         self.llm = ChatOpenAI(
             model=os.getenv("DEEPSEEK_MODEL", "deepseek-chat"),
             api_key=api_key,

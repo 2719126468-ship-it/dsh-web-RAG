@@ -12,9 +12,6 @@ import os
 import re
 from typing import List
 
-from langchain_openai import ChatOpenAI
-from langchain_core.prompts import ChatPromptTemplate
-
 
 REWRITE_PROMPT = """You are a search query rewriter.
 
@@ -35,11 +32,15 @@ Rewritten queries:
 class QueryRewriter:
     def __init__(self, num_variants: int = 3):
         self.num_variants = num_variants
-        self.prompt = ChatPromptTemplate.from_template(REWRITE_PROMPT)
+        self.prompt = None
         api_key = os.getenv("DEEPSEEK_API_KEY", "")
         if not api_key or api_key.startswith("sk-xxxxxxx"):
             self.llm = None
         else:
+            from langchain_core.prompts import ChatPromptTemplate
+            from langchain_openai import ChatOpenAI
+
+            self.prompt = ChatPromptTemplate.from_template(REWRITE_PROMPT)
             self.llm = ChatOpenAI(
                 model=os.getenv("DEEPSEEK_MODEL", "deepseek-chat"),
                 api_key=api_key,

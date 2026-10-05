@@ -17,7 +17,7 @@
 |---|---|
 | 开源协议 | MIT（见 [LICENSE](LICENSE)） |
 | CI | GitHub Actions，Python 3.11 / 3.12 双版本 |
-| 测试 | pytest，112 个用例（根目录 tests/ + rag-private-docs/tests/）|
+| 测试 | pytest，120 个用例（根目录 tests/ + rag-private-docs/tests/）|
 | 容器化 | Dockerfile + .dockerignore + docker.yml |
 | 一键安装 | sh install.sh |
 | 健康检查 | sh diagnose.sh |
@@ -296,6 +296,13 @@ python src/watcher.py
 
     cd src
     python evaluator.py
+
+如需让评估器调用 answerability 检查器并统计其准确率：
+
+    python evaluator.py --answerability
+
+该模式需要有效的 `DEEPSEEK_API_KEY`，并会额外输出
+`answerability_accuracy` 与 `answerability_coverage`。
 
 输出示例（当前 dev 集 21 条：9 正 + 12 负。以下数值为 dev 集实测值，非历史演示）：
 

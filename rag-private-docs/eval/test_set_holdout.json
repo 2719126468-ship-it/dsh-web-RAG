@@ -9,7 +9,8 @@
     "must_cite": "h1-team-offsite-2025.md",
     "expect_reject": false,
     "negative_type": null,
-    "difficulty": "easy"
+    "difficulty": "easy",
+    "expect_answerability": "ANSWERABLE"
   },
   {
     "id": "q_q1_dev_budget",
@@ -24,7 +25,8 @@
     ],
     "expect_reject": false,
     "negative_type": null,
-    "difficulty": "easy"
+    "difficulty": "easy",
+    "expect_answerability": "ANSWERABLE"
   },
   {
     "id": "q_incident_root_cause",
@@ -36,7 +38,8 @@
     "must_cite": "h3-incident-postmortem.md",
     "expect_reject": false,
     "negative_type": null,
-    "difficulty": "medium"
+    "difficulty": "medium",
+    "expect_answerability": "ANSWERABLE"
   },
   {
     "id": "n_dl_training",
@@ -45,7 +48,8 @@
     "must_cite": "__none__",
     "expect_reject": true,
     "negative_type": "off_topic",
-    "difficulty": "easy"
+    "difficulty": "easy",
+    "expect_answerability": "UNANSWERABLE"
   },
   {
     "id": "n_k8s_vs_docker",
@@ -54,7 +58,8 @@
     "must_cite": "__none__",
     "expect_reject": true,
     "negative_type": "off_topic",
-    "difficulty": "easy"
+    "difficulty": "easy",
+    "expect_answerability": "UNANSWERABLE"
   },
   {
     "id": "n_offsite_attendees",
@@ -63,7 +68,8 @@
     "must_cite": "__none__",
     "expect_reject": true,
     "negative_type": "topic_relevant_no_answer",
-    "difficulty": "hard"
+    "difficulty": "hard",
+    "expect_answerability": "UNANSWERABLE"
   },
   {
     "id": "n_incident_user_count",
@@ -72,6 +78,7 @@
     "must_cite": "__none__",
     "expect_reject": true,
     "negative_type": "topic_relevant_no_answer",
-    "difficulty": "hard"
+    "difficulty": "hard",
+    "expect_answerability": "UNANSWERABLE"
   }
 ]

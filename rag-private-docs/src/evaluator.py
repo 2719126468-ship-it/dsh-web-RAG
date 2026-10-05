@@ -184,11 +184,7 @@ def evaluate(retriever: HybridRetriever, test_set: List[Dict] = None) -> Dict[st
     """Run all test questions and compute aggregate metrics."""
     import os as _os
     if test_set is None:
-        if args.answerability:
-        import os as _os_cli
-        _os_cli.environ["EVALUATE_ANSWERABILITY"] = "true"
-
-    test_set = DEFAULT_TEST_SET
+        test_set = DEFAULT_TEST_SET
     use_rewrite = _os.getenv("USE_QUERY_REWRITE", "false").lower() == "true"
     rewriter = None
     fuser = None
@@ -360,6 +356,10 @@ def main():
         help="启用 LLM answerability 评估（也可用 EVALUATE_ANSWERABILITY=true）",
     )
     args = parser.parse_args()
+
+    if args.answerability:
+        import os as _os_cli
+        _os_cli.environ["EVALUATE_ANSWERABILITY"] = "true"
 
     if args.holdout:
         path = HOLDOUT_SET_PATH

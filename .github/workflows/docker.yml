@@ -6,11 +6,13 @@ on:
       - 'Dockerfile'
       - '.dockerignore'
       - 'rag-private-docs/requirements.txt'
+      - 'rag-private-docs/src/**'
       - '.github/workflows/docker.yml'
   pull_request:
     paths:
       - 'Dockerfile'
       - 'rag-private-docs/requirements.txt'
+      - 'rag-private-docs/src/**'
   workflow_dispatch:
 
 jobs:

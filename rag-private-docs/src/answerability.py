@@ -80,7 +80,7 @@ class AnswerabilityChecker:
 
         seen_parents = set()
 
-        for i, hit in enumerate(hits, start=1):
+        for hit in hits:
             meta = hit.get("metadata", {})
             source = meta.get("source", "unknown")
             parent_id = meta.get("parent_id")
@@ -103,7 +103,7 @@ class AnswerabilityChecker:
             # Keep each individual block bounded so one giant document cannot
             # crowd out all other evidence.
             content = content[:3500]
-            block = f"[{i}] {source}\n{content}"
+            block = f"[{len(blocks) + 1}] {source}\n{content}"
             if total + len(block) > max_total_chars:
                 remaining = max_total_chars - total
                 if remaining < 200:

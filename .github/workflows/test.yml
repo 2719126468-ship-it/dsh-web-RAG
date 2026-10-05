@@ -30,7 +30,6 @@ jobs:
           pip install pytest ruff python-dotenv
 
       - name: Lint with Ruff
-        continue-on-error: true
         run: |
           ruff check rag-private-docs/src/ rag-private-docs/tests/ tests/
 

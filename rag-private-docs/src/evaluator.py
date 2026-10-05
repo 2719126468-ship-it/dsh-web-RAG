@@ -244,6 +244,14 @@ def evaluate(retriever: HybridRetriever, test_set: List[Dict] = None) -> Dict[st
                 hits = filtered
         row_confidence = max_confidence(hits)
         expect_reject = item.get("expect_reject", False)
+        expected_answerability = item.get(
+            "expect_answerability",
+            "UNANSWERABLE" if expect_reject else "ANSWERABLE",
+        )
+        if expected_answerability not in {"ANSWERABLE", "UNANSWERABLE"}:
+            raise ValueError(
+                f"invalid expect_answerability for {q!r}: {expected_answerability!r}"
+            )
         reject_correct = None
         answerability_status = None
         answerability_reason = None
@@ -261,6 +269,7 @@ def evaluate(retriever: HybridRetriever, test_set: List[Dict] = None) -> Dict[st
             "question": q,
             "must_cite": must,
             "expect_reject": expect_reject,
+            "expect_answerability": expected_answerability,
             "confidence": round(row_confidence, 4),
             "reject_correct": reject_correct,
             "answerability_status": answerability_status,
@@ -303,7 +312,7 @@ def evaluate(retriever: HybridRetriever, test_set: List[Dict] = None) -> Dict[st
         ]
         answerability_correct = 0
         for r in definitive_rows:
-            expected = "UNANSWERABLE" if r.get("expect_reject") else "ANSWERABLE"
+            expected = r.get("expect_answerability")
             if r.get("answerability_status") == expected:
                 answerability_correct += 1
         if answerability_rows:

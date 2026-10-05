@@ -51,7 +51,7 @@ import pytest
 ROOT = Path(__file__).resolve().parent.parent
 README = ROOT / "README.md"
 
-# README 里声明的用例数，形如「pytest，108 个用例」/「pytest, 108 个用例」
+# README 里声明的用例数，形如「pytest，120 个用例」/「pytest, 108 个用例」
 README_COUNT_RE = re.compile(r"pytest[，,]\s*(\d+)\s*个用例")
 
 # pytest 收集阶段的汇总行，形如「96 tests collected in 0.06s」/「1 test collected」

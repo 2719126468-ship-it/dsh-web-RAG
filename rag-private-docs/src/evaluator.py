@@ -184,7 +184,11 @@ def evaluate(retriever: HybridRetriever, test_set: List[Dict] = None) -> Dict[st
     """Run all test questions and compute aggregate metrics."""
     import os as _os
     if test_set is None:
-        test_set = DEFAULT_TEST_SET
+        if args.answerability:
+        import os as _os_cli
+        _os_cli.environ["EVALUATE_ANSWERABILITY"] = "true"
+
+    test_set = DEFAULT_TEST_SET
     use_rewrite = _os.getenv("USE_QUERY_REWRITE", "false").lower() == "true"
     rewriter = None
     fuser = None
@@ -192,6 +196,19 @@ def evaluate(retriever: HybridRetriever, test_set: List[Dict] = None) -> Dict[st
         from query_rewriter import QueryRewriter, fuse_by_parent_id
         rewriter = QueryRewriter(num_variants=3)
         fuser = fuse_by_parent_id
+
+    evaluate_answerability = (
+        _os.getenv("EVALUATE_ANSWERABILITY", "false").lower() == "true"
+    )
+    answerability_checker = None
+    if evaluate_answerability:
+        from answerability import AnswerabilityChecker
+        answerability_checker = AnswerabilityChecker()
+        if not answerability_checker.enabled or answerability_checker.llm is None:
+            raise RuntimeError(
+                "EVALUATE_ANSWERABILITY=true requires a valid DEEPSEEK_API_KEY "
+                "and the answerability checker to be enabled."
+            )
     use_critic = _os.getenv("USE_CRITIC", "false").lower() == "true"
     critic = None
     if use_critic:
@@ -206,7 +223,8 @@ def evaluate(retriever: HybridRetriever, test_set: List[Dict] = None) -> Dict[st
             queries = rewriter.rewrite(q)
             if len(queries) > 1:
                 all_hits = [retriever.retrieve(qq, top_k=5) for qq in queries]
-                hits = fuser(all_hits)
+                fused_hits = fuser(all_hits)
+                hits = retriever.rerank_candidates(q, fused_hits, top_k=5)
             else:
                 hits = retriever.retrieve(q, top_k=5)
         else:
@@ -231,6 +249,12 @@ def evaluate(retriever: HybridRetriever, test_set: List[Dict] = None) -> Dict[st
         row_confidence = max_confidence(hits)
         expect_reject = item.get("expect_reject", False)
         reject_correct = None
+        answerability_status = None
+        answerability_reason = None
+        if answerability_checker is not None:
+            verdict = answerability_checker.check(q, hits)
+            answerability_status = verdict.get("status")
+            answerability_reason = verdict.get("reason")
         # 注意：reject_correct 只测 confidence 闸（qa.py 的 max_conf < 0.30），
         # 且只测闸本身，不测 LLM 层——topic_rel 中 conf >= 0.30 的题会通过此闸
         # 进入 LLM，由 LLM 在 prompt 约束下自行判断拒答（probe run 34987266954 实测）。
@@ -243,6 +267,8 @@ def evaluate(retriever: HybridRetriever, test_set: List[Dict] = None) -> Dict[st
             "expect_reject": expect_reject,
             "confidence": round(row_confidence, 4),
             "reject_correct": reject_correct,
+            "answerability_status": answerability_status,
+            "answerability_reason": answerability_reason,
             "negative_type": item.get("negative_type"),
             "top1_source": hits[0].get("metadata", {}).get("source", "") if hits else "",
             "hit_at_1": hit_at_k(hits, must, k=1),
@@ -270,6 +296,22 @@ def evaluate(retriever: HybridRetriever, test_set: List[Dict] = None) -> Dict[st
     if negative_rows:
         correct = sum(1 for r in negative_rows if r.get("reject_correct"))
         summary["reject_accuracy"] = round(correct / len(negative_rows), 3)
+
+    if answerability_checker is not None:
+        answerability_rows = [
+            r for r in rows if r.get("answerability_status") is not None
+        ]
+        answerability_correct = 0
+        for r in answerability_rows:
+            expected_answerable = not r.get("expect_reject")
+            actual_answerable = r.get("answerability_status") == "ANSWERABLE"
+            if actual_answerable == expected_answerable:
+                answerability_correct += 1
+        if answerability_rows:
+            summary["answerability_accuracy"] = round(
+                answerability_correct / len(answerability_rows), 3
+            )
+            summary["num_answerability_evaluated"] = len(answerability_rows)
     summary["answer_hit_at_1"] = round(sum(r["answer_hit_at_1"] for r in positive_rows) / len(positive_rows), 3) if positive_rows else 0.0
     summary["answer_hit_at_3"] = round(sum(r["answer_hit_at_3"] for r in positive_rows) / len(positive_rows), 3) if positive_rows else 0.0
     summary["answer_hit_at_5"] = round(sum(r["answer_hit_at_5"] for r in positive_rows) / len(positive_rows), 3) if positive_rows else 0.0
@@ -312,6 +354,11 @@ def main():
     parser.add_argument("--save", action="store_true", help="保存结果到 eval/results/")
     parser.add_argument("--holdout", action="store_true",
                         help="使用 hold-out 集，而不是调参集")
+    parser.add_argument(
+        "--answerability",
+        action="store_true",
+        help="启用 LLM answerability 评估（也可用 EVALUATE_ANSWERABILITY=true）",
+    )
     args = parser.parse_args()
 
     if args.holdout:

@@ -78,11 +78,24 @@ class AnswerabilityChecker:
         blocks: List[str] = []
         total = 0
 
+        seen_parents = set()
+
         for i, hit in enumerate(hits, start=1):
             meta = hit.get("metadata", {})
             source = meta.get("source", "unknown")
+            parent_id = meta.get("parent_id")
             parent_text = meta.get("parent_text", "")
-            content = parent_text or hit.get("content", "")
+
+            # Match the presentation contract used by retriever.format_for_llm:
+            # show each parent once, otherwise use the hit content.
+            if parent_text and parent_id:
+                if parent_id in seen_parents:
+                    continue
+                seen_parents.add(parent_id)
+                content = parent_text
+            else:
+                content = hit.get("content", "")
+
             content = str(content).strip()
             if not content:
                 continue

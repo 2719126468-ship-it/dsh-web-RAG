@@ -426,11 +426,15 @@ AI 返回答案时，每个事实都标了来源，你可以点击展开看到�
   {
     "question": "你的问题",
     "ground_truth_keywords": ["关键词1", "关键词2"],
-    "must_cite": "文件名.md"
+    "must_cite": "文件名.md",
+    "expect_reject": false,
+    "expect_answerability": "ANSWERABLE"
   }
 ]
 
 然后跑 `python evaluator.py`，它会自动用你的测试集评估。
+
+如果启用 `python evaluator.py --answerability`，建议为每条样本显式填写 `expect_answerability`（`ANSWERABLE` 或 `UNANSWERABLE`）；`expect_reject` 仍只表示 confidence 拒答闸的期望结果。
 
 ### Notion 同步
 

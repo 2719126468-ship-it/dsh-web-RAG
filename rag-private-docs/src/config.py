@@ -32,24 +32,27 @@ class Config:
     # ========== Retrieval ==========
     TOP_K: int = 5
 
-    # ========== PDF 解析器 ==========
+    # ========== PDF parser ==========
     PDF_PARSER: str = "default"
 
-    # ========== 多模态（可选）==========
+    # ========== Multimodal (optional) ==========
     ENABLE_MULTIMODAL: bool = False
     VLM_MODEL: str = "gpt-4o-mini"
     VLM_BASE_URL: str = ""
     VLM_API_KEY: str = ""
 
-    # ========== 对话记忆（可选）==========
+    # ========== Conversation memory (optional) ==========
     ENABLE_MEMORY: bool = False
     MEMORY_PATH: str = "../memory/memories.json"
     MEMORY_TOP_K: int = 3
 
-    # ========== API / Webhook（可选）==========
-    API_HOST: str = "0.0.0.0"
-    API_PORT: int = 8000
-    WEBHOOK_URL: str = ""
+    # ========== API / Webhook ==========
+    # Bind to localhost by default. Expose only behind a trusted proxy/firewall.
+    API_HOST: str = os.getenv("API_HOST", "127.0.0.1")
+    API_PORT: int = int(os.getenv("API_PORT", "8000"))
+    API_AUTH_TOKEN: str = os.getenv("API_AUTH_TOKEN", "")
+    API_ADMIN_TOKEN: str = os.getenv("API_ADMIN_TOKEN", "")
+    WEBHOOK_URL: str = os.getenv("WEBHOOK_URL", "")
 
 
 config = Config()

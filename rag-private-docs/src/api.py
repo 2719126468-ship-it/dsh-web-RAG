@@ -118,6 +118,8 @@ if FastAPI is not None:
         req: QueryRequest,
         _authorized: None = Depends(require_api_token),
     ):
+        if not req.question.strip():
+            raise HTTPException(status_code=422, detail="Question must not be blank")
         try:
             result = _get_engine().query(req.question.strip(), top_k=req.top_k)
             return QueryResponse(

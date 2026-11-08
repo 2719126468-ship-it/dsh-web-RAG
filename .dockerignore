@@ -13,8 +13,24 @@ logs
 .coverage
 htmlcov
 .tox
-qdrant_data
-.env
-.env.*
 .DS_Store
 Thumbs.db
+
+# Secrets: match at every directory depth
+**/.env
+**/.env.*
+**/secrets.toml
+**/*.pem
+**/*.key
+
+# Local/private runtime state (mounted from the host in docker-compose)
+**/qdrant_data/
+**/memory/
+**/eval/results/
+**/.cache/
+**/models/
+**/*.bak
+**/probe_stability_results.json
+
+# User knowledge files must be mounted, never baked into an image
+rag-private-docs/docs/

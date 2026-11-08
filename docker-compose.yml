@@ -4,8 +4,9 @@ services:
     image: dsh-web-rag:latest
     container_name: dsh-web-rag
     ports:
-      - "8501:8501"
+      - "127.0.0.1:8501:8501"
     volumes:
+      # Private user data is mounted at runtime and excluded from the image.
       - ./rag-private-docs/docs:/app/rag-private-docs/docs
       - ./rag-private-docs/qdrant_data:/app/rag-private-docs/qdrant_data
       - ./rag-private-docs/memory:/app/rag-private-docs/memory

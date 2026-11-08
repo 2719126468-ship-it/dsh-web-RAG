@@ -1,4 +1,4 @@
-# ===== Python =====
+# Python
 __pycache__/
 *.py[cod]
 *$py.class
@@ -9,59 +9,60 @@ dist/
 *.egg-info/
 .eggs/
 
-# ===== 虚拟环境 =====
+# Virtual environments
 venv/
 .venv/
 env/
 ENV/
 
-# ===== 环境变量（含密钥，绝对不能提交）=====
+# Secrets at any depth
 .env
-.env.local
-.env.*.local
+.env.*
+**/.env
+**/.env.*
+**/secrets.toml
+**/*.pem
+**/*.key
 
-# ===== 日志 =====
+# Logs
 *.log
 logs/
 
-# ===== 向量数据库（可本地重建）=====
+# Local vector databases and model caches
 qdrant_data/
+**/qdrant_data/
 *.lock
-
-# ===== 模型缓存 =====
 .cache/
 models/
 *.bin
 *.safetensors
 
-# ===== IDE / 编辑器 =====
+# IDE / editor
 .vscode/
 .idea/
 *.swp
 *.swo
 *~
 
-# ===== 操作系统 =====
+# OS
 .DS_Store
 Thumbs.db
 desktop.ini
 
-# ===== 测试 / 覆盖率 =====
+# Tests / coverage
 .pytest_cache/
 .coverage
 htmlcov/
 .tox/
 
-# ===== Streamlit =====
+# Streamlit secrets
 .streamlit/secrets.toml
+**/.streamlit/secrets.toml
 
-# 临时调试脚本
-*.bat
-*.ps1
-
-# 对话记忆本地数据
+# Local user data
 rag-private-docs/memory/
 rag-private-docs/eval/results/
+rag-private-docs/docs/
 *.bak
 probe_stability_results.json
 .devx/

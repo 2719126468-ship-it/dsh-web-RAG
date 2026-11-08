@@ -272,6 +272,27 @@ streamlit run app.py
 浏览器会自动打开 http://localhost:8501 。如果没自动打开，手动访问该地址。
 
 
+### API 安全配置
+
+HTTP API 默认仅监听本机地址 `127.0.0.1`。查询接口和索引管理接口默认关闭，必须分别配置独立令牌后才能使用：
+
+```bash
+# 在 rag-private-docs/.env 中设置，使用密码管理器生成随机长令牌
+API_AUTH_TOKEN=your-long-random-query-token
+API_ADMIN_TOKEN=your-different-long-random-admin-token
+API_HOST=127.0.0.1
+API_PORT=8000
+```
+
+- `POST /query` 使用 `Authorization: Bearer $API_AUTH_TOKEN`。
+- `POST /index` 使用 `Authorization: Bearer $API_ADMIN_TOKEN`。
+- 全量重建还必须额外发送 `X-Confirm-Force: true`，并且应先备份向量库。
+- 未配置令牌时，受保护接口返回 `503`，不会退化为匿名访问。
+- `/health` 只返回最小健康状态；API 文档端点默认关闭。
+- Docker Compose 默认只将 Streamlit 绑定到本机 `127.0.0.1:8501`。需要远程访问时，应通过带 TLS 和访问控制的可信反向代理暴露，不要直接开放容器端口。
+
+**私人数据边界**：`rag-private-docs/docs/`、`.env`、Qdrant 数据、记忆和评估结果不会被打进 Docker 镜像。Docker Compose 会在运行时挂载文档、向量库和记忆目录；本地部署时请将个人资料放在这些运行时数据目录中，不要提交到 Git。
+
 ## 日常怎么用
 
 往 `docs/` 文件夹里丢新文档（合同、笔记、PDF、Word 都行），然后运行：
